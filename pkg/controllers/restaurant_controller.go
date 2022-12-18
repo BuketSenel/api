@@ -1,7 +1,7 @@
 package controllers
 
-func GetRestaurant() {
-
+func GetRestaurant(id int64) {
+	
 }
 
 func getTopRestaurants() {
