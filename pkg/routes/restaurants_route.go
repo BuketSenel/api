@@ -8,6 +8,7 @@ import (
 )
 
 func restaurantRoute(rg *gin.RouterGroup) {
+
 	rg.GET("/:resId", func(c *gin.Context) {
 		resID := c.Param("resId")
 		id, _ := strconv.ParseInt(resID, 16, 64)
@@ -19,7 +20,12 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		}
 	})
 
-	rg.GET("/", func(context *gin.Context) {
-		controllers.GetTopRestaurants()
+	rg.GET("/", func(c *gin.Context) {
+		restaurant := controllers.GetTopRestaurants()
+		if restaurant == nil || len(restaurant) == 0 {
+			c.AbortWithStatus(http.StatusNotFound)
+		} else {
+			c.IndentedJSON(http.StatusOK, restaurant)
+		}
 	})
 }

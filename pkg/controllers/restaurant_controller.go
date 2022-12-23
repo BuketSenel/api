@@ -12,7 +12,7 @@ var selfdb = "selfservicedb"
 
 func GetRestaurant(id int64) []models.Restaurant {
 	user, database, pass := config.GetMysqlConfig()
-	db, err := sql.Open("mysql", user+":"+pass+"@tcp("+database+"):3306")
+	db, err := sql.Open("mysql", user+":"+pass+"@tcp("+database+"):3306/selfservice")
 
 	if err != nil {
 		fmt.Println("Err", err.Error())
