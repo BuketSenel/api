@@ -6,7 +6,7 @@ var route = gin.Default()
 
 func StartRouting() {
 	getRoutes()
-	err := route.Run(":8080")
+	err := route.Run(":5000")
 	if err != nil {
 		return
 	}
