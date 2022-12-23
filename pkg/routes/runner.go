@@ -13,8 +13,8 @@ func StartRouting() {
 }
 
 func getRoutes() {
-	restaurant := route.Group("/restaurant")
-	user := route.Group("/user")
+	restaurant := route.Group("/restaurants")
+	user := route.Group("/users")
 	restaurantRoute(restaurant)
 	userRoute(user)
 }

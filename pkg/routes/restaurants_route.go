@@ -19,7 +19,7 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		}
 	})
 
-	rg.GET("/restaurants", func(context *gin.Context) {
+	rg.GET("/", func(context *gin.Context) {
 		controllers.GetTopRestaurants()
 	})
 }
