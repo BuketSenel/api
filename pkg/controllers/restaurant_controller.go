@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/SelfServiceCo/api/pkg/models"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 func GetRestaurant(id int64) []models.Restaurant {

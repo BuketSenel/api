@@ -5,7 +5,7 @@
 *.so
 *.dylib
 .idea
-pkg/configs/
+pkg/configs/*
 # Test binary, built with `go test -c`
 *.test
 
