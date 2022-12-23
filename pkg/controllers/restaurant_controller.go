@@ -3,12 +3,16 @@ package controllers
 import (
 	"database/sql"
 	"fmt"
+	"github.com/SelfServiceCo/api/pkg/config"
 	"github.com/SelfServiceCo/api/pkg/models"
 	_ "github.com/go-sql-driver/mysql"
 )
 
+var selfdb = "selfservicedb"
+
 func GetRestaurant(id int64) []models.Restaurant {
-	db, err := sql.Open("mysql", "")
+	user, database, pass := config.GetMysqlConfig()
+	db, err := sql.Open("mysql", user+":"+pass+"@tcp("+database+"):3306")
 
 	if err != nil {
 		fmt.Println("Err", err.Error())
