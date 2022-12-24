@@ -32,7 +32,7 @@ func GetRestaurant(id int64) []models.Restaurant {
 		var rest models.Restaurant
 
 		err = results.Scan(&rest.ID, &rest.Name, &rest.Summary, &rest.Logo, &rest.Address, &rest.District,
-			&rest.City, &rest.Country, &rest.Phone, &rest.Tags)
+			&rest.City, &rest.Country, &rest.Phone, &rest.Tags, &rest.CreatedAt, &rest.UpdatedAt)
 		if err != nil {
 			panic(err.Error())
 		}
