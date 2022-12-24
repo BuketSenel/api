@@ -3,16 +3,16 @@ package controllers
 import (
 	"database/sql"
 	"fmt"
-	"github.com/SelfServiceCo/api/pkg/config"
+	"github.com/SelfServiceCo/api/pkg/drivers"
 	"github.com/SelfServiceCo/api/pkg/models"
 	_ "github.com/go-sql-driver/mysql"
 )
 
 var selfdb = "selfservicedb"
+var conf = drivers.MysqlConfigLoad()
 
 func GetRestaurant(id int64) []models.Restaurant {
-	user, database, pass := config.GetMysqlConfig()
-	db, err := sql.Open("mysql", user+":"+pass+"@tcp("+database+"):3306/selfservice")
+	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
 
 	if err != nil {
 		fmt.Println("Err", err.Error())
@@ -43,7 +43,7 @@ func GetRestaurant(id int64) []models.Restaurant {
 }
 
 func GetTopRestaurants() []models.Restaurant {
-	db, err := sql.Open("mysql", "")
+	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
 
 	if err != nil {
 		fmt.Println("Err", err.Error())
@@ -63,7 +63,7 @@ func GetTopRestaurants() []models.Restaurant {
 		var rest models.Restaurant
 
 		err = results.Scan(&rest.ID, &rest.Name, &rest.Summary, &rest.Logo, &rest.Address, &rest.District,
-			&rest.City, &rest.Country, &rest.Phone, &rest.Tags)
+			&rest.City, &rest.Country, &rest.Phone, &rest.Tags, &rest.CreatedAt, &rest.UpdatedAt)
 		if err != nil {
 			panic(err.Error())
 		}
