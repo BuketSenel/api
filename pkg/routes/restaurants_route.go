@@ -60,6 +60,33 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		}
 	})
 
+	restGroup.GET("/:resId/categories/:catID/products", func(c *gin.Context) {
+		resID := c.Param("resId")
+		catID := c.Param("catID")
+		rid, _ := strconv.ParseInt(resID, 16, 64)
+		cid, _ := strconv.ParseInt(catID, 16, 64)
+		products := controllers.ProductsByCategories(cid, rid)
+		if products == nil || len(products) == 0 {
+			c.Header("Content-Type", "application/json")
+			c.JSON(http.StatusNotFound,
+				gin.H{
+					"status":    http.StatusNotFound,
+					"message: ": "No categories found!",
+				})
+			c.Abort()
+		} else {
+			c.JSON(http.StatusOK,
+				gin.H{
+					"status":  http.StatusOK,
+					"message": "OK",
+					"size":    len(products),
+					"items":   products,
+					"offset":  "0",
+					"limit":   "25",
+				})
+		}
+	})
+
 	restGroup.GET("", func(c *gin.Context) {
 		restaurant := controllers.GetTopRestaurants()
 		if restaurant == nil || len(restaurant) == 0 {
