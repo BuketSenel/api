@@ -60,7 +60,7 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		}
 	})
 
-	restGroup.GET("/all", func(c *gin.Context) {
+	restGroup.GET("", func(c *gin.Context) {
 		restaurant := controllers.GetTopRestaurants()
 		if restaurant == nil || len(restaurant) == 0 {
 			c.Header("Content-Type", "application/json")
