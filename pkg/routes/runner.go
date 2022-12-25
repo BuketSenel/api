@@ -15,7 +15,8 @@ func StartRouting() {
 func getRoutes() {
 	restaurant := route.Group("/restaurants")
 	user := route.Group("/users")
-	//category := route.Group("/categories")
+	category := route.Group("/categories")
 	restaurantRoute(restaurant)
 	userRoute(user)
+	categoryRoute(category)
 }
