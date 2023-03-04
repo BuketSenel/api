@@ -20,4 +20,3 @@ pkg/configs/*
 !.elasticbeanstalk/*.cfg.yml
 !.elasticbeanstalk/*.global.yml
 bin/
-Config/
