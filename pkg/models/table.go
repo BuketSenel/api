@@ -1,7 +1,7 @@
 package models
 
 type Table struct {
-	ID    int64
-	ResID int64
-	QR    string
+	ID    int64  `json:"id"`
+	ResID int64  `json:"RID"`
+	QR    string `json:"qr"`
 }
