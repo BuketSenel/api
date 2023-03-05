@@ -27,7 +27,10 @@ func RestaurantRegister(c *gin.Context) bool {
 	restaurant.Email = c.PostForm("email")
 	restaurant.Password = c.PostForm("password")
 	restaurant.Phone = c.PostForm("phone")
-	if !SaveRestaurant(restaurant, c) {
+	result, err := SaveRestaurant(restaurant, c)
+	if !result {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+
 		fmt.Println("Registration Error!")
 		return false
 	}
@@ -35,20 +38,18 @@ func RestaurantRegister(c *gin.Context) bool {
 	return true
 }
 
-func SaveRestaurant(r models.Restaurant, c *gin.Context) bool {
+func SaveRestaurant(r models.Restaurant, c *gin.Context) (bool, error) {
 	credential := models.Credential{}
 	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
 	if err != nil {
-		fmt.Println("Connection Error!", err.Error())
-		return false
+		return false, err
 	}
 	hashedPass := PasswordHash(fmt.Sprint(r.Password))
 
 	query := "INSERT INTO restaurant (name, password, address, district, city, country, phone, email, created_at) values (?,?,?,?,?,?,?,?,?)"
 	results, err := db.ExecContext(c, query, string(r.Name), hashedPass, string(r.Address), string(r.District), string(r.City), string(r.Country), string(r.Phone), string(r.Email), time.Now())
-	if err != nil {
-		fmt.Println("Insertion Error!", err.Error())
-		return false
+	if results == nil || err != nil {
+		return false, err
 	}
 
 	credential.Email = string(r.Email)
@@ -56,13 +57,11 @@ func SaveRestaurant(r models.Restaurant, c *gin.Context) bool {
 	query = "INSERT INTO credentials (email, password) values (?,?)"
 	results, err = db.ExecContext(c, query, string(r.Email), hashedPass)
 	if err != nil {
-		fmt.Println("Insertion Error!", err.Error())
-		return false
+		return false, err
 	}
 
 	defer db.Close()
-	fmt.Println("Results: ", results)
-	return true
+	return true, nil
 }
 
 func PasswordHash(password string) string {

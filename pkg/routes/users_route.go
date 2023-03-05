@@ -14,8 +14,8 @@ func userRoute(rg *gin.RouterGroup) {
 	})
 
 	rg.POST("/register", func(c *gin.Context) {
-		register := controllers.UserRegister(c)
-		if !register {
+		register, err := controllers.UserRegister(c)
+		if !register || err != nil {
 			c.Header("Content-Type", "application/json")
 			c.JSON(http.StatusNotFound,
 				gin.H{
