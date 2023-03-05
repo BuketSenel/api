@@ -9,9 +9,9 @@ import (
 func resRegisterRoute(rg *gin.RouterGroup) {
 	regGroup := rg.Group("/")
 
-	regGroup.POST("/resRegister", func(c *gin.Context) {
+	regGroup.POST("/restaurant/register", func(c *gin.Context) {
 		register := controllers.RestaurantRegister(c)
-		if register {
+		if !register {
 			c.Header("Content-Type", "application/json")
 			c.JSON(http.StatusNotFound,
 				gin.H{

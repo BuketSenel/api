@@ -9,9 +9,9 @@ import (
 func userRegisterRoute(rg *gin.RouterGroup) {
 	regGroup := rg.Group("/")
 
-	regGroup.POST("/userRegister", func(c *gin.Context) {
+	regGroup.POST("/user/register", func(c *gin.Context) {
 		register := controllers.UserRegister(c)
-		if register {
+		if !register {
 			c.Header("Content-Type", "application/json")
 			c.JSON(http.StatusNotFound,
 				gin.H{
