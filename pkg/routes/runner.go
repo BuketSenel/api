@@ -16,7 +16,14 @@ func getRoutes() {
 	restaurant := route.Group("/restaurants")
 	user := route.Group("/users")
 	category := route.Group("/categories")
+	resRegister := route.Group("/resRegister")
+	userRegister := route.Group("/userRegister")
+	login := route.Group("/login")
+
 	restaurantRoute(restaurant)
 	userRoute(user)
 	categoryRoute(category)
+	resRegisterRoute(resRegister)
+	loginRoute(login)
+	userRegisterRoute(userRegister)
 }
