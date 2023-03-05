@@ -3,15 +3,17 @@ package controllers
 import (
 	"database/sql"
 	"fmt"
+	"net/http"
+	"time"
+
 	"github.com/SelfServiceCo/api/pkg/models"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
-	"net/http"
-	"time"
 )
 
 func RestaurantRegister(c *gin.Context) bool {
 	restaurant := models.Restaurant{}
+
 	if err := c.ShouldBindJSON(&restaurant); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return false
@@ -29,7 +31,7 @@ func RestaurantRegister(c *gin.Context) bool {
 		fmt.Println("Registration Error!")
 		return false
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "validated!"})
+	c.JSON(http.StatusOK, gin.H{"message": "Restaurant registered!"})
 	return true
 }
 
