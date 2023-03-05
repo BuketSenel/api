@@ -38,7 +38,7 @@ func SaveUser(u models.User, c *gin.Context) bool {
 	}
 	hashedPass := PasswordHash(fmt.Sprint(u.Password))
 
-	query := "INSERT INTO restaurant (name, password, phone, email, created_at) values (?,?,?,?,?)"
+	query := "INSERT INTO users (name, password, phone, email, created_at) values (?,?,?,?,?)"
 	results, err := db.ExecContext(c, query, string(u.Name), hashedPass, string(u.Phone), string(u.Email), u.CreatedAt)
 	if err != nil {
 		fmt.Println("Insertion Error!", err.Error())
