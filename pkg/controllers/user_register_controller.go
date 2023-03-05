@@ -12,10 +12,6 @@ import (
 
 func UserRegister(c *gin.Context) (bool, error) {
 	user := models.User{}
-	if err := c.ShouldBindJSON(&user); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return false, err
-	}
 
 	user.Name = c.PostForm("name")
 	user.Phone = c.PostForm("phone")

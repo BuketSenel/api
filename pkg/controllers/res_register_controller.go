@@ -14,11 +14,6 @@ import (
 func RestaurantRegister(c *gin.Context) bool {
 	restaurant := models.Restaurant{}
 
-	if err := c.ShouldBindJSON(&restaurant); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return false
-	}
-
 	restaurant.Name = c.PostForm("name")
 	restaurant.Address = c.PostForm("address")
 	restaurant.District = c.PostForm("district")
