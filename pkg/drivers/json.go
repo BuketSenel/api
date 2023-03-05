@@ -3,8 +3,9 @@ package drivers
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/SelfServiceCo/api/pkg/models"
 	"os"
+
+	"github.com/SelfServiceCo/api/pkg/models"
 )
 
 func JsonOpen(path string) *os.File {
@@ -19,7 +20,7 @@ func JsonOpen(path string) *os.File {
 }
 
 func MysqlConfigLoad() models.Config {
-	file, err := os.ReadFile("Config/conf.json")
+	file, err := os.ReadFile("/Config/conf.json")
 	if err != nil {
 		panic(err.Error())
 	}
