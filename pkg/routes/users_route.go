@@ -21,7 +21,8 @@ func userRoute(rg *gin.RouterGroup) {
 				gin.H{
 					"status":    http.StatusNotFound,
 					"message: ": "User registration failed!",
-				})
+				},
+			)
 			c.Abort()
 		} else {
 			c.JSON(http.StatusOK, gin.H{
@@ -30,7 +31,8 @@ func userRoute(rg *gin.RouterGroup) {
 				"items":   register,
 				"offset":  "0",
 				"limit":   "25",
-			})
+			},
+			)
 		}
 	})
 }

@@ -18,6 +18,11 @@ func UserRegister(c *gin.Context) (bool, error) {
 	user.Email = c.PostForm("email")
 	user.Password = c.PostForm("password")
 
+	if user.Name == "" || user.Phone == "" || user.Email == "" || user.Password == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Please fill all the fields"})
+		return false, nil
+	}
+
 	if c.PostForm("res_id") == "" {
 		user.ResID = 0
 	} else {
@@ -26,10 +31,6 @@ func UserRegister(c *gin.Context) (bool, error) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Please fill all the fields"})
 			return false, nil
 		}
-	}
-	if user.Name == "" || user.Phone == "" || user.Email == "" || user.Password == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Please fill all the fields"})
-		return false, nil
 	}
 
 	result, err := SaveUser(user, c)
