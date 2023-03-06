@@ -17,6 +17,7 @@ func UserRegister(c *gin.Context) (bool, error) {
 	user.Phone = c.PostForm("phone")
 	user.Email = c.PostForm("email")
 	user.Password = c.PostForm("password")
+	user.Type = c.PostForm("type")
 
 	if user.Name == "" || user.Phone == "" || user.Email == "" || user.Password == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Please fill all the fields"})
@@ -27,10 +28,6 @@ func UserRegister(c *gin.Context) (bool, error) {
 		user.ResID = 0
 	} else {
 		user.ResID, _ = strconv.ParseInt(c.PostForm("res_id"), 10, 64)
-		if c.PostForm("res_id") == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Please fill all the fields"})
-			return false, nil
-		}
 	}
 
 	result, err := SaveUser(user, c)
@@ -52,14 +49,14 @@ func SaveUser(u models.User, c *gin.Context) (bool, error) {
 	}
 	hashedPass := PasswordHash(fmt.Sprint(u.Password))
 
-	query := "INSERT INTO users (name, password, phone, email) values (?,?,?,?)"
-	results, err := db.ExecContext(c, query, string(u.Name), hashedPass, string(u.Phone), string(u.Email), u.CreatedAt)
+	query := "INSERT INTO users (name, password, phone, email, resID, type) values (?,?,?,? ?,?)"
+	results, err := db.ExecContext(c, query, u.Name, hashedPass, u.Phone, u.Email, u.ResID, u.Type)
 	if err != nil {
 		fmt.Println("Insertion Error!", err.Error())
 		return false, err
 	}
 
-	credential.Email = string(u.Email)
+	credential.Email = u.Email
 	credential.Password = hashedPass
 	query = "INSERT INTO credentials (email, password) values (?,?)"
 	results, err = db.ExecContext(c, query, string(u.Email), hashedPass)
