@@ -32,7 +32,7 @@ func UserRegister(c *gin.Context) (bool, gin.H) {
 	result, err := SaveUser(user, c)
 
 	if !result || err != nil {
-		return false, gin.H{"error": "Registration Error"}
+		return result, err
 	}
 
 	return true, gin.H{"message": "User registered!"}
@@ -47,7 +47,7 @@ func SaveUser(u models.User, c *gin.Context) (bool, gin.H) {
 	}
 	hashedPass := PasswordHash(fmt.Sprint(u.Password))
 
-	query := "INSERT INTO users (name, password, phone, email, resID, type) values (?,?,?,? ?,?)"
+	query := "INSERT INTO users (name, password, phone, email, resID, type) values (?,?,?,?,?,?)"
 	results, err := db.ExecContext(c, query, u.Name, hashedPass, u.Phone, u.Email, u.ResID, u.Type)
 	if err != nil {
 		message := gin.H{"status": http.StatusBadRequest, "message": err.Error()}

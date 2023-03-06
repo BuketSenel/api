@@ -45,7 +45,7 @@ func SaveRestaurant(r models.Restaurant, c *gin.Context) (bool, error) {
 	}
 	hashedPass := PasswordHash(fmt.Sprint(r.Password))
 
-	query := "INSERT INTO restaurant (name, password, address, district, city, country, phone, email) values (?,?,?,?,?,?,?,?)"
+	query := "INSERT INTO restaurants (name, password, address, district, city, country, phone, email) values (?,?,?,?,?,?,?,?)"
 	results, err := db.ExecContext(c, query, string(r.Name), hashedPass, string(r.Address), string(r.District), string(r.City), string(r.Country), string(r.Phone), string(r.Email))
 	if results == nil || err != nil {
 		return false, err
