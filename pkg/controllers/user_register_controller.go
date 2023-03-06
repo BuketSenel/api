@@ -3,14 +3,13 @@ package controllers
 import (
 	"database/sql"
 	"fmt"
-	"net/http"
 	"strconv"
 
 	"github.com/SelfServiceCo/api/pkg/models"
 	"github.com/gin-gonic/gin"
 )
 
-func UserRegister(c *gin.Context) (bool, error) {
+func UserRegister(c *gin.Context) (bool, gin.H) {
 	user := models.User{}
 
 	user.Name = c.PostForm("name")
@@ -20,8 +19,7 @@ func UserRegister(c *gin.Context) (bool, error) {
 	user.Type = c.PostForm("type")
 
 	if user.Name == "" || user.Phone == "" || user.Email == "" || user.Password == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Please fill all the fields"})
-		return false, nil
+		return false, gin.H{"error": "Please fill all the fields"}
 	}
 
 	if c.PostForm("res_id") == "" {
@@ -33,27 +31,26 @@ func UserRegister(c *gin.Context) (bool, error) {
 	result, err := SaveUser(user, c)
 
 	if !result || err != nil {
-		fmt.Println("Registration Error!")
-		return false, err
+		return false, gin.H{"error": "Registration Error"}
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "User registered!"})
-	return true, nil
+
+	return true, gin.H{"message": "User registered!"}
 }
 
-func SaveUser(u models.User, c *gin.Context) (bool, error) {
+func SaveUser(u models.User, c *gin.Context) (bool, gin.H) {
 	credential := models.Credential{}
 	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return false, err
+		message := gin.H{"error": err.Error()}
+		return false, message
 	}
 	hashedPass := PasswordHash(fmt.Sprint(u.Password))
 
 	query := "INSERT INTO users (name, password, phone, email, resID, type) values (?,?,?,? ?,?)"
 	results, err := db.ExecContext(c, query, u.Name, hashedPass, u.Phone, u.Email, u.ResID, u.Type)
 	if err != nil {
-		fmt.Println("Insertion Error!", err.Error())
-		return false, err
+		message := gin.H{"Insertion Error": err.Error()}
+		return false, message
 	}
 
 	credential.Email = u.Email
@@ -61,8 +58,8 @@ func SaveUser(u models.User, c *gin.Context) (bool, error) {
 	query = "INSERT INTO credentials (email, password) values (?,?)"
 	results, err = db.ExecContext(c, query, string(u.Email), hashedPass)
 	if err != nil {
-		fmt.Println("Insertion Error!", err.Error())
-		return false, err
+		message := gin.H{"Insertion Error": err.Error()}
+		return false, message
 	}
 
 	defer db.Close()
