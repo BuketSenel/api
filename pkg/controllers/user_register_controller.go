@@ -3,6 +3,7 @@ package controllers
 import (
 	"database/sql"
 	"fmt"
+	"net/http"
 	"strconv"
 
 	"github.com/SelfServiceCo/api/pkg/models"
@@ -41,7 +42,7 @@ func SaveUser(u models.User, c *gin.Context) (bool, gin.H) {
 	credential := models.Credential{}
 	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
 	if err != nil {
-		message := gin.H{"error": err.Error()}
+		message := gin.H{"status": http.StatusBadGateway, "message": err.Error()}
 		return false, message
 	}
 	hashedPass := PasswordHash(fmt.Sprint(u.Password))
@@ -49,7 +50,7 @@ func SaveUser(u models.User, c *gin.Context) (bool, gin.H) {
 	query := "INSERT INTO users (name, password, phone, email, resID, type) values (?,?,?,? ?,?)"
 	results, err := db.ExecContext(c, query, u.Name, hashedPass, u.Phone, u.Email, u.ResID, u.Type)
 	if err != nil {
-		message := gin.H{"Insertion Error": err.Error()}
+		message := gin.H{"status": http.StatusBadRequest, "message": err.Error()}
 		return false, message
 	}
 
@@ -58,7 +59,7 @@ func SaveUser(u models.User, c *gin.Context) (bool, gin.H) {
 	query = "INSERT INTO credentials (email, password) values (?,?)"
 	results, err = db.ExecContext(c, query, string(u.Email), hashedPass)
 	if err != nil {
-		message := gin.H{"Insertion Error": err.Error()}
+		message := gin.H{"status": http.StatusBadRequest, "message": err.Error()}
 		return false, message
 	}
 

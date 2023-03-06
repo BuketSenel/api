@@ -10,7 +10,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func RestaurantRegister(c *gin.Context) bool {
+func RestaurantRegister(c *gin.Context) (bool, gin.H) {
 	restaurant := models.Restaurant{}
 
 	restaurant.Name = c.PostForm("name")
@@ -25,18 +25,16 @@ func RestaurantRegister(c *gin.Context) bool {
 	if restaurant.Name == "" || restaurant.Address == "" || restaurant.District == "" || restaurant.City == "" || restaurant.Country == "" || restaurant.Email == "" || restaurant.Password == "" || restaurant.Phone == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Please fill all the fields"})
 		fmt.Println("Registration Error!")
-		return false
+		return false, gin.H{"status": http.StatusBadRequest, "message": "Please fill all the fields"}
 	}
 
 	result, err := SaveRestaurant(restaurant, c)
 	if !result {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-
-		fmt.Println("Registration Error!")
-		return false
+		return false, gin.H{"status": http.StatusBadRequest, "message": "Registration Error!"}
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "Restaurant registered!"})
-	return true
+
+	return true, gin.H{"status": http.StatusOK, "message": "Registration Error!"}
 }
 
 func SaveRestaurant(r models.Restaurant, c *gin.Context) (bool, error) {

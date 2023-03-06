@@ -14,15 +14,10 @@ func userRoute(rg *gin.RouterGroup) {
 	})
 
 	rg.POST("/register", func(c *gin.Context) {
-		register, err := controllers.UserRegister(c)
-		if !register || err != nil {
+		register, header := controllers.UserRegister(c)
+		if !register {
 			c.Header("Content-Type", "application/json")
-			c.JSON(http.StatusNotFound,
-				gin.H{
-					"status":    http.StatusNotFound,
-					"message: ": "User registration failed!",
-				},
-			)
+			c.JSON(http.StatusNotFound, header)
 			c.Abort()
 		} else {
 			c.JSON(http.StatusOK, gin.H{

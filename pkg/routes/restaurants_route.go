@@ -120,15 +120,10 @@ func restaurantRoute(rg *gin.RouterGroup) {
 	})
 
 	restGroup.POST("/register", func(c *gin.Context) {
-		register := controllers.RestaurantRegister(c)
+		register, header := controllers.RestaurantRegister(c)
 		if !register {
 			c.Header("Content-Type", "application/json")
-			c.JSON(http.StatusNotFound,
-				gin.H{
-					"status":    http.StatusNotFound,
-					"message: ": "Registration failed!",
-				},
-			)
+			c.JSON(http.StatusNotFound, header)
 			c.Abort()
 		} else {
 			c.JSON(http.StatusOK,
