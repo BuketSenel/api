@@ -43,4 +43,5 @@ func createJWTToken() (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	ss, err := token.SignedString(mySigningKey)
 	fmt.Printf("%v %v", ss, err)
+	return ss, err
 }
