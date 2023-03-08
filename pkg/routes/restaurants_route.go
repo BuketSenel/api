@@ -162,4 +162,62 @@ func restaurantRoute(rg *gin.RouterGroup) {
 			)
 		}
 	})
+
+	restGroup.GET("/:resId/orders", func(c *gin.Context) {
+		resID := c.Param("resId")
+		id, _ := strconv.ParseInt(resID, 16, 64)
+		orders := controllers.GetRestaurantOrders(id)
+		if orders == nil || len(orders) == 0 {
+			c.Header("Content-Type", "application/json")
+			c.JSON(http.StatusNotFound,
+				gin.H{
+					"status":    http.StatusNotFound,
+					"message: ": "No restaurants retrieved!",
+				},
+			)
+			c.Abort()
+		} else {
+			c.JSON(http.StatusOK,
+				gin.H{
+					"status":  "200",
+					"message": "OK",
+					"size":    len(orders),
+					"items":   orders,
+					"offset":  "0",
+					"limit":   "25",
+				},
+			)
+		}
+	})
+
+	restGroup.POST("/:resId/orders/:orderID", func(c *gin.Context) {
+		resID := c.Param("resId")
+		orderID := c.Param("orderID")
+		var status string
+		c.BindJSON(&status)
+		rid, _ := strconv.ParseInt(resID, 16, 64)
+		oid, _ := strconv.ParseInt(orderID, 16, 64)
+		order := controllers.ChangeOrderStatus(oid, rid, status)
+		if !order {
+			c.Header("Content-Type", "application/json")
+			c.JSON(http.StatusNotFound,
+				gin.H{
+					"status":    http.StatusNotFound,
+					"message: ": "No restaurants retrieved!",
+				},
+			)
+			c.Abort()
+		} else {
+			c.JSON(http.StatusOK,
+				gin.H{
+					"status":  "200",
+					"message": "OK",
+					"items":   order,
+					"offset":  "0",
+					"limit":   "25",
+				},
+			)
+		}
+	})
+
 }
