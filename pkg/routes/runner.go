@@ -1,9 +1,7 @@
 package routes
 
 import (
-	"time"
-
-	"github.com/gin-contrib/cors"
+	"github.com/SelfServiceCo/api/pkg/middleware"
 	"github.com/gin-gonic/gin"
 )
 
@@ -11,19 +9,7 @@ var route = gin.Default()
 
 func StartRouting() {
 	getRoutes()
-
-	route.Use(cors.New(cors.Config{
-		AllowAllOrigins: true,
-		AllowOriginFunc: func(origin string) bool {
-			return true
-		},
-		AllowMethods:     []string{"PUT", "PATCH", "OPTIONS", "GET", "POST", "DELETE"},
-		AllowHeaders:     []string{"*"},
-		ExposeHeaders:    []string{"Content-Length"},
-		AllowCredentials: true,
-		MaxAge:           12 * time.Hour,
-	}))
-
+	route.Use(middleware.CORSMiddleware())
 	err := route.Run(":5000")
 	if err != nil {
 		return
