@@ -1,9 +1,10 @@
 package routes
 
 import (
+	"net/http"
+
 	"github.com/SelfServiceCo/api/pkg/controllers"
 	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
 func categoryRoute(rg *gin.RouterGroup) {

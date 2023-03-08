@@ -4,11 +4,13 @@ import (
 	"net/http"
 
 	"github.com/SelfServiceCo/api/pkg/controllers"
+	"github.com/SelfServiceCo/api/pkg/middleware"
 	"github.com/gin-gonic/gin"
 )
 
 func loginRoute(rg *gin.RouterGroup) {
 	logGroup := rg.Group("/")
+	rg.Use(middleware.CORSMiddleware())
 
 	logGroup.POST("", func(c *gin.Context) {
 		logGroup, header := controllers.Login(c)
