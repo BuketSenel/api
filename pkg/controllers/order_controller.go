@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/SelfServiceCo/api/pkg/models"
+	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -84,4 +85,49 @@ func GetOrdersByUser(uid int64) []models.Order {
 	}
 
 	return orders
+}
+
+func GetOrder(id int64) []models.Order {
+	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
+	if err != nil {
+		fmt.Println("Err", err.Error())
+		return nil
+	}
+
+	results, err := db.Query("SELECT * FROM orders WHERE ID = ?", id)
+	if err != nil {
+		fmt.Println("Err", err.Error())
+		return nil
+	}
+	order := []models.Order{}
+	for results.Next() {
+		var ord models.Order
+		err = results.Scan(&ord.ID, &ord.UserID, &ord.ResID, &ord.TableID, &ord.Details, &ord.Status)
+		if err != nil {
+			panic(err.Error())
+		}
+		order = append(order, ord)
+	}
+	return order
+}
+
+func CreateOrder(c *gin.Context) gin.H {
+	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
+	if err != nil {
+		fmt.Println("Err", err.Error())
+		return nil
+	}
+	var orderRequest models.Order
+	err = c.BindJSON(&orderRequest)
+	if err != nil {
+		fmt.Println("Err", err.Error())
+		return nil
+	}
+
+	results, err := db.Query("INSERT INTO orders (ID, user_id, RID, table_id, details, status) VALUES (?, ?, ?, ?, ?)", orderRequest.ID, orderRequest.UserID, orderRequest.ResID, orderRequest.TableID, orderRequest.Details, orderRequest.Status)
+	if err != nil {
+		fmt.Println("Err", err.Error())
+		return nil
+	}
+	return gin.H{"status": "success", "data": results}
 }
