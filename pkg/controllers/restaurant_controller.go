@@ -3,6 +3,7 @@ package controllers
 import (
 	"database/sql"
 	"fmt"
+
 	"github.com/SelfServiceCo/api/pkg/drivers"
 	"github.com/SelfServiceCo/api/pkg/models"
 	_ "github.com/go-sql-driver/mysql"
@@ -71,4 +72,33 @@ func GetTopRestaurants() []models.Restaurant {
 	}
 
 	return restaurants
+}
+
+func GetRestaurantStaff(rid int64) []models.User {
+	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
+
+	if err != nil {
+		fmt.Println("Err", err.Error())
+		return nil
+	}
+
+	results, err := db.Query("SELECT * FROM users WHERE RID = ?", rid)
+	defer db.Close()
+
+	if err != nil {
+		fmt.Println("Err", err.Error())
+		return nil
+	}
+
+	staff := []models.User{}
+	for results.Next() {
+		var user models.User
+		err = results.Scan(&user.ID, &user.Name, &user.Email, &user.ResID, &user.Type, &user.CreatedAt, &user.UpdatedAt)
+		if err != nil {
+			panic(err.Error())
+		}
+		staff = append(staff, user)
+	}
+
+	return staff
 }

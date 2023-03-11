@@ -190,15 +190,18 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		}
 	})
 
-	restGroup.POST("/:resId/orders/:orderID", func(c *gin.Context) {
-		resID := c.Param("resId")
-		orderID := c.Param("orderID")
-		var status string
-		c.BindJSON(&status)
-		rid, _ := strconv.ParseInt(resID, 16, 64)
-		oid, _ := strconv.ParseInt(orderID, 16, 64)
-		order := controllers.ChangeOrderStatus(oid, rid, status)
-		if !order {
+	restGroup.POST("/orders", func(c *gin.Context) {
+		type ChangeOrder struct {
+			orderId string `json:"orderId"`
+			resId   string `json:"resId"`
+			status  string `json:"status"`
+		}
+		order := new(ChangeOrder)
+		c.BindJSON(&order)
+		rid, _ := strconv.ParseInt(order.resId, 16, 64)
+		oid, _ := strconv.ParseInt(order.orderId, 16, 64)
+		orderChanged := controllers.ChangeOrderStatus(oid, rid, order.status)
+		if !orderChanged {
 			c.Header("Content-Type", "application/json")
 			c.JSON(http.StatusNotFound,
 				gin.H{
@@ -212,7 +215,7 @@ func restaurantRoute(rg *gin.RouterGroup) {
 				gin.H{
 					"status":  "200",
 					"message": "OK",
-					"items":   order,
+					"items":   orderChanged,
 					"offset":  "0",
 					"limit":   "25",
 				},
@@ -220,4 +223,30 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		}
 	})
 
+	restGroup.GET("/:resID/staff", func(c *gin.Context) {
+		resID := c.Param("resID")
+		rid, _ := strconv.ParseInt(resID, 16, 64)
+		staff := controllers.GetRestaurantStaff(rid)
+		if staff == nil || len(staff) == 0 {
+			c.Header("Content-Type", "application/json")
+			c.JSON(http.StatusNotFound,
+				gin.H{
+					"status":    http.StatusNotFound,
+					"message: ": "No staff found!",
+				},
+			)
+			c.Abort()
+		} else {
+			c.JSON(http.StatusOK,
+				gin.H{
+					"status":  "200",
+					"message": "OK",
+					"size":    len(staff),
+					"items":   staff,
+					"offset":  "0",
+					"limit":   "25",
+				},
+			)
+		}
+	})
 }
