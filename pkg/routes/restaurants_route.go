@@ -15,7 +15,7 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		resID := c.Param("resId")
 		id, _ := strconv.ParseInt(resID, 16, 64)
 		restaurant := controllers.GetRestaurant(id)
-		if restaurant == nil || len(restaurant) == 0 {
+		if len(restaurant) == 0 {
 			c.Header("Content-Type", "application/json")
 			c.JSON(http.StatusNotFound,
 				gin.H{
@@ -41,7 +41,7 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		resID := c.Param("resId")
 		id, _ := strconv.ParseInt(resID, 16, 64)
 		categories := controllers.CategoriesByRestaurant(id)
-		if categories == nil || len(categories) == 0 {
+		if len(categories) == 0 {
 			c.Header("Content-Type", "application/json")
 			c.JSON(http.StatusNotFound,
 				gin.H{
@@ -69,7 +69,7 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		rid, _ := strconv.ParseInt(resID, 16, 64)
 		cid, _ := strconv.ParseInt(catID, 16, 64)
 		products := controllers.ProductsByCategories(cid, rid)
-		if products == nil || len(products) == 0 {
+		if len(products) == 0 {
 			c.Header("Content-Type", "application/json")
 			c.JSON(http.StatusNotFound,
 				gin.H{
@@ -96,7 +96,7 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		resID := c.Param("resId")
 		rid, _ := strconv.ParseInt(resID, 16, 64)
 		products := controllers.ProductsByRestaurants(rid)
-		if products == nil || len(products) == 0 {
+		if len(products) == 0 {
 			c.Header("Content-Type", "application/json")
 			c.JSON(http.StatusNotFound,
 				gin.H{
@@ -140,7 +140,7 @@ func restaurantRoute(rg *gin.RouterGroup) {
 
 	restGroup.GET("", func(c *gin.Context) {
 		restaurant := controllers.GetTopRestaurants()
-		if restaurant == nil || len(restaurant) == 0 {
+		if len(restaurant) == 0 {
 			c.Header("Content-Type", "application/json")
 			c.JSON(http.StatusNotFound,
 				gin.H{
@@ -167,7 +167,7 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		resID := c.Param("resId")
 		id, _ := strconv.ParseInt(resID, 16, 64)
 		orders := controllers.GetRestaurantOrders(id)
-		if orders == nil || len(orders) == 0 {
+		if len(orders) == 0 {
 			c.Header("Content-Type", "application/json")
 			c.JSON(http.StatusNotFound,
 				gin.H{
@@ -227,7 +227,7 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		resID := c.Param("resID")
 		rid, _ := strconv.ParseInt(resID, 16, 64)
 		staff := controllers.GetRestaurantStaff(rid)
-		if staff == nil || len(staff) == 0 {
+		if len(staff) == 0 {
 			c.Header("Content-Type", "application/json")
 			c.JSON(http.StatusNotFound,
 				gin.H{
@@ -243,6 +243,62 @@ func restaurantRoute(rg *gin.RouterGroup) {
 					"message": "OK",
 					"size":    len(staff),
 					"items":   staff,
+					"offset":  "0",
+					"limit":   "25",
+				},
+			)
+		}
+	})
+
+	restGroup.GET("/:resID/tables", func(c *gin.Context) {
+		resID := c.Param("resID")
+		rid, _ := strconv.ParseInt(resID, 16, 64)
+		tables := controllers.GetRestaurantTables(rid, 0)
+		if len(tables) == 0 {
+			c.Header("Content-Type", "application/json")
+			c.JSON(http.StatusNotFound,
+				gin.H{
+					"status":    http.StatusNotFound,
+					"message: ": "No staff found!",
+				},
+			)
+			c.Abort()
+		} else {
+			c.JSON(http.StatusOK,
+				gin.H{
+					"status":  "200",
+					"message": "OK",
+					"size":    len(tables),
+					"items":   tables,
+					"offset":  "0",
+					"limit":   "25",
+				},
+			)
+		}
+	})
+
+	restGroup.GET("/:resID/tables/:tableID", func(c *gin.Context) {
+		resID := c.Param("resID")
+		tableID := c.Param("tableID")
+		rid, _ := strconv.ParseInt(resID, 16, 64)
+		tid, _ := strconv.ParseInt(tableID, 16, 64)
+		tables := controllers.GetRestaurantTables(rid, tid)
+		if len(tables) == 0 {
+			c.Header("Content-Type", "application/json")
+			c.JSON(http.StatusNotFound,
+				gin.H{
+					"status":    http.StatusNotFound,
+					"message: ": "No staff found!",
+				},
+			)
+			c.Abort()
+		} else {
+			c.JSON(http.StatusOK,
+				gin.H{
+					"status":  "200",
+					"message": "OK",
+					"size":    len(tables),
+					"items":   tables,
 					"offset":  "0",
 					"limit":   "25",
 				},
