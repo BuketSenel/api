@@ -223,8 +223,8 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		}
 	})
 
-	restGroup.GET("/:resID/staff", func(c *gin.Context) {
-		resID := c.Param("resID")
+	restGroup.GET("/:resId/staff", func(c *gin.Context) {
+		resID := c.Param("resId")
 		rid, _ := strconv.ParseInt(resID, 16, 64)
 		staff := controllers.GetRestaurantStaff(rid)
 		if len(staff) == 0 {
@@ -250,7 +250,7 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		}
 	})
 
-	restGroup.GET("/:resID/tables", func(c *gin.Context) {
+	restGroup.GET("/:resId/tables", func(c *gin.Context) {
 		resID := c.Param("resID")
 		rid, _ := strconv.ParseInt(resID, 16, 64)
 		tables := controllers.GetRestaurantTables(rid, 0)
@@ -277,7 +277,7 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		}
 	})
 
-	restGroup.GET("/:resID/tables/:tableID", func(c *gin.Context) {
+	restGroup.GET("/:resId/tables/:tableID", func(c *gin.Context) {
 		resID := c.Param("resID")
 		tableID := c.Param("tableID")
 		rid, _ := strconv.ParseInt(resID, 16, 64)
