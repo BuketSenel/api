@@ -24,6 +24,8 @@ func userRoute(rg *gin.RouterGroup) {
 			c.JSON(http.StatusNotFound, header)
 			c.Abort()
 		} else {
+			c.Header("Content-Type", "application/json")
+			//c.Header("Authorization", header.Token)
 			c.JSON(http.StatusOK, gin.H{
 				"status":  "200",
 				"message": "OK",

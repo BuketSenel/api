@@ -8,22 +8,21 @@ import (
 )
 
 func createJWTToken() (string, error) {
-	mySigningKey := []byte("AllYourBase")
+	mySigningKey := []byte("selfservice")
 
-	type MyCustomClaims struct {
-		Foo string `json:"foo"`
+	type selfClaims struct {
+		resID string `json:"resID"`
 		jwt.RegisteredClaims
 	}
 
 	// Create the claims
-	claims := MyCustomClaims{
+	claims := selfClaims{
 		"bar",
 		jwt.RegisteredClaims{
 			// A usual scenario is to set the expiration time relative to the current time
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			NotBefore: jwt.NewNumericDate(time.Now()),
-			Issuer:    "test",
 			Subject:   "somebody",
 			ID:        "1",
 			Audience:  []string{"somebody_else"},
@@ -31,7 +30,7 @@ func createJWTToken() (string, error) {
 	}
 
 	// Create claims while leaving out some of the optional fields
-	claims = MyCustomClaims{
+	claims = selfClaims{
 		"bar",
 		jwt.RegisteredClaims{
 			// Also fixed dates can be used for the NumericDate

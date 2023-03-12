@@ -33,7 +33,7 @@ func Login(c *gin.Context) (bool, gin.H) {
 		return false, gin.H{"status": http.StatusBadRequest, "message": err}
 	}
 
-	VerifyPassword(cred.Password, hashed)
+	err = VerifyPassword(cred.Password, hashed)
 	if err != nil {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "Verification Error!"}
 	}
