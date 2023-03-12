@@ -12,18 +12,11 @@ import (
 
 func RestaurantRegister(c *gin.Context) (bool, gin.H) {
 	restaurant := models.Restaurant{}
-
-	restaurant.Name = c.PostForm("name")
-	restaurant.Address = c.PostForm("address")
-	restaurant.District = c.PostForm("district")
-	restaurant.City = c.PostForm("city")
-	restaurant.Country = c.PostForm("country")
-	restaurant.Email = c.PostForm("email")
-	restaurant.Password = c.PostForm("password")
-	restaurant.Phone = c.PostForm("phone")
+	if err := c.BindJSON(&restaurant); err != nil {
+		c.AbortWithError(401, err)
+	}
 
 	if restaurant.Name == "" || restaurant.Address == "" || restaurant.District == "" || restaurant.City == "" || restaurant.Country == "" || restaurant.Email == "" || restaurant.Password == "" || restaurant.Phone == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Please fill all the fields"})
 		fmt.Println("Registration Error!")
 		return false, gin.H{"status": http.StatusBadRequest, "message": "Please fill all the fields"}
 	}

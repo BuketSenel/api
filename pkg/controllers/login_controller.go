@@ -13,8 +13,10 @@ import (
 func Login(c *gin.Context) (bool, gin.H) {
 	cred := models.Credential{}
 	var hashed string
-	cred.Email = c.PostForm("email")
-	cred.Password = c.PostForm("password")
+
+	if err := c.BindJSON(&cred); err != nil {
+		c.AbortWithError(401, err)
+	}
 
 	if cred.Email == "" || cred.Password == "" {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "Please fill all the fields"}

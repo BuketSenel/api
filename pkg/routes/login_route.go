@@ -9,8 +9,8 @@ import (
 )
 
 func loginRoute(rg *gin.RouterGroup) {
-	logGroup := rg.Group("/")
-	rg.Use(middleware.CORSMiddleware())
+	logGroup := rg.Group("")
+	logGroup.Use(middleware.CORSMiddleware())
 
 	logGroup.POST("", func(c *gin.Context) {
 		logGroup, header := controllers.Login(c)

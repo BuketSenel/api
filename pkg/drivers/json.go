@@ -20,7 +20,7 @@ func JsonOpen(path string) *os.File {
 }
 
 func MysqlConfigLoad() models.Config {
-	file, err := os.ReadFile("Config/conf.json")
+	file, err := os.ReadFile("/Config/conf.json")
 	if err != nil {
 		panic(err.Error())
 	}

@@ -5,12 +5,13 @@ import (
 	"strconv"
 
 	"github.com/SelfServiceCo/api/pkg/controllers"
+	"github.com/SelfServiceCo/api/pkg/middleware"
 	"github.com/gin-gonic/gin"
 )
 
 func restaurantRoute(rg *gin.RouterGroup) {
 	restGroup := rg.Group("/")
-
+	restGroup.Use(middleware.CORSMiddleware())
 	restGroup.GET("/:resId", func(c *gin.Context) {
 		resID := c.Param("resId")
 		id, _ := strconv.ParseInt(resID, 16, 64)

@@ -13,11 +13,9 @@ import (
 func UserRegister(c *gin.Context) (bool, gin.H) {
 	user := models.User{}
 
-	user.Name = c.PostForm("name")
-	user.Phone = c.PostForm("phone")
-	user.Email = c.PostForm("email")
-	user.Password = c.PostForm("password")
-	user.Type = c.PostForm("type")
+	if err := c.BindJSON(&user); err != nil {
+		c.AbortWithError(401, err)
+	}
 
 	if user.Name == "" || user.Phone == "" || user.Email == "" || user.Password == "" {
 		return false, gin.H{"error": "Please fill all the fields"}

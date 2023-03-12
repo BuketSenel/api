@@ -4,12 +4,13 @@ import (
 	"net/http"
 
 	"github.com/SelfServiceCo/api/pkg/controllers"
+	"github.com/SelfServiceCo/api/pkg/middleware"
 	"github.com/gin-gonic/gin"
 )
 
 func categoryRoute(rg *gin.RouterGroup) {
 	catGroup := rg.Group("/")
-
+	catGroup.Use(middleware.CORSMiddleware())
 	catGroup.GET("", func(c *gin.Context) {
 		categories := controllers.GetCategories()
 		if categories == nil || len(categories) == 0 {
