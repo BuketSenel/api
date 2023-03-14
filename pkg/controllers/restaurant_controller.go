@@ -51,7 +51,7 @@ func GetTopRestaurants() []models.Restaurant {
 		return nil
 	}
 
-	results, err := db.Query("SELECT * FROM restaurant")
+	results, err := db.Query("SELECT * FROM restaurants")
 	defer db.Close()
 
 	if err != nil {
