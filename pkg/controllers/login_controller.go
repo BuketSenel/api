@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/SelfServiceCo/api/pkg/models"
-	"github.com/SelfServiceCo/api/pkg/token"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -39,10 +38,10 @@ func Login(c *gin.Context) (string, gin.H) {
 		return "", gin.H{"status": http.StatusBadRequest, "message": "Verification Error!"}
 	}
 
-	token, err := token.CreateJWTToken()
+	token, err := CreateJWTToken()
 
 	if err != nil {
-		return "" , gin.H{"status": http.StatusBadRequest, "message": "Token Creation Error!"}
+		return "", gin.H{"status": http.StatusBadRequest, "message": "Token Creation Error!"}
 	}
 
 	return token, gin.H{"status": http.StatusOK, "message": "Login Successful!"}
