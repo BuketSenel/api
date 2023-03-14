@@ -111,20 +111,17 @@ func GetOrder(oid int64, rid int64) []models.Order {
 	return order
 }
 
-func CreateOrder(c *gin.Context) gin.H {
+func CreateOrder(order models.Order) gin.H {
 	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
 	if err != nil {
 		fmt.Println("Err", err.Error())
 		return nil
 	}
-	var orderRequest models.Order
-	err = c.BindJSON(&orderRequest)
 	if err != nil {
 		fmt.Println("Err", err.Error())
 		return nil
 	}
-
-	results, err := db.Query("INSERT INTO orders (ID, user_id, RID, table_id, details, status) VALUES (?, ?, ?, ?, ?)", orderRequest.ID, orderRequest.UserID, orderRequest.ResID, orderRequest.TableID, orderRequest.Details, orderRequest.Status)
+	results, err := db.Query("INSERT INTO orders (ID, user_id, RID, table_id, details, status) VALUES (?, ?, ?, ?, ?)", order.ID, order.UserID, order.ResID, order.TableID, order.Details, order.Status)
 	if err != nil {
 		fmt.Println("Err", err.Error())
 		return nil
