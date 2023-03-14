@@ -191,6 +191,34 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		}
 	})
 
+	restGroup.GET("/:resId/orders/:orderId", func(c *gin.Context) {
+		orderID := c.Param("orderId")
+		resID := c.Param("resId")
+		oid, _ := strconv.ParseInt(orderID, 16, 64)
+		rid, _ := strconv.ParseInt(resID, 16, 64)
+		order := controllers.GetOrder(oid, rid)
+		if len(order) == 0 {
+			c.Header("Content-Type", "application/json")
+			c.JSON(http.StatusNotFound,
+				gin.H{
+					"status":    http.StatusNotFound,
+					"message: ": "Order not found!",
+				})
+			c.Abort()
+		} else {
+			c.JSON(http.StatusOK,
+				gin.H{
+					"status":  http.StatusOK,
+					"message": "OK",
+					"size":    len(order),
+					"items":   order,
+					"offset":  "0",
+					"limit":   "25",
+				},
+			)
+		}
+	})
+
 	restGroup.POST("/orders", func(c *gin.Context) {
 		type ChangeOrder struct {
 			orderId string `json:"orderId"`

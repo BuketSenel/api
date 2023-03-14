@@ -87,14 +87,14 @@ func GetOrdersByUser(uid int64) []models.Order {
 	return orders
 }
 
-func GetOrder(id int64) []models.Order {
+func GetOrder(oid int64, rid int64) []models.Order {
 	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
 	if err != nil {
 		fmt.Println("Err", err.Error())
 		return nil
 	}
 
-	results, err := db.Query("SELECT * FROM orders WHERE ID = ?", id)
+	results, err := db.Query("SELECT * FROM orders WHERE ID = ? AND RID = ?", oid, rid)
 	if err != nil {
 		fmt.Println("Err", err.Error())
 		return nil
