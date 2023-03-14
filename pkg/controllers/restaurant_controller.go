@@ -20,7 +20,7 @@ func GetRestaurant(id int64) []models.Restaurant {
 		return nil
 	}
 
-	results, err := db.Query("SELECT * FROM restaurant WHERE ID = ?", id)
+	results, err := db.Query("SELECT * FROM restaurants WHERE ID = ?", id)
 	defer db.Close()
 
 	if err != nil {
