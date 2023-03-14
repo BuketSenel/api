@@ -44,6 +44,12 @@ func Login(c *gin.Context) (string, gin.H) {
 		return "", gin.H{"status": http.StatusBadRequest, "message": "Token Creation Error!"}
 	}
 
+	results, err := db.Query("INSERT INTO credentials (token) VALUES (?) WHERE email = ?", token, cred.Email)
+	if err != nil {
+		fmt.Println("Selection Error!", err.Error())
+		return "", gin.H{"status": http.StatusBadRequest, "message": err, "data": results}
+	}
+
 	return token, gin.H{"status": http.StatusOK, "message": "Login Successful!"}
 }
 
