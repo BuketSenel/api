@@ -21,3 +21,4 @@ pkg/configs/*
 !.elasticbeanstalk/*.global.yml
 bin/
 Config/
+Config/conf.json
