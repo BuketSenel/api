@@ -14,7 +14,7 @@ func getSigningKey() []byte {
 	return []byte("selfservice")
 }
 
-func createJWTToken() (string, error) {
+func CreateJWTToken() (string, error) {
 
 	SigningKey := getSigningKey()
 	type selfClaims struct {

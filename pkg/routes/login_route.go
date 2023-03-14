@@ -14,7 +14,7 @@ func loginRoute(rg *gin.RouterGroup) {
 	logGroup.Use(middleware.JwtAuthMiddleware())
 	logGroup.POST("", func(c *gin.Context) {
 		logGroup, header := controllers.Login(c)
-		if !logGroup {
+		if logGroup == "" {
 			c.Header("Content-Type", "application/json")
 			c.JSON(http.StatusNotFound, header)
 			c.Abort()
