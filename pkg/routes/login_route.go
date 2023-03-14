@@ -22,7 +22,7 @@ func loginRoute(rg *gin.RouterGroup) {
 			c.JSON(http.StatusOK, gin.H{
 				"status":  "200",
 				"message": "OK",
-				"items":   "logGroup",
+				"items":   logGroup,
 				"offset":  "0",
 				"limit":   "25",
 			},
