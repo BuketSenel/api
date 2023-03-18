@@ -45,7 +45,7 @@ func GetOrdersByUser(uid int64) ([]models.Order, gin.H) {
 		return orders, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error!"}
 	}
 
-	results, err := db.Query("SELECT * FROM orders WHERE userId = ?", uid)
+	results, err := db.Query("SELECT * FROM orders WHERE userId=?", uid)
 	defer db.Close()
 	if err != nil {
 		return orders, gin.H{"status": http.StatusBadRequest, "message": "Selection Error!"}
@@ -54,9 +54,9 @@ func GetOrdersByUser(uid int64) ([]models.Order, gin.H) {
 	for results.Next() {
 		order := models.Order{}
 		err = results.Scan(&order.ID, &order.UserID, &order.ResID, &order.TableID, &order.Details, &order.Status, &order.Created, &order.Updated)
-
-		return orders, gin.H{"status": http.StatusBadRequest, "message": "Scan Error!", "data": results, "Error": err.Error()}
-
+		if err != nil {
+			return orders, gin.H{"status": http.StatusBadRequest, "message": "Scan Error!", "data": results, "Error": err.Error()}
+		}
 		orders = append(orders, order)
 	}
 
