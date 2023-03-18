@@ -167,15 +167,10 @@ func restaurantRoute(rg *gin.RouterGroup) {
 	restGroup.GET("/:resId/orders", func(c *gin.Context) {
 		resID := c.Param("resId")
 		id, _ := strconv.ParseInt(resID, 16, 64)
-		orders := controllers.GetRestaurantOrders(id)
+		orders, header := controllers.GetRestaurantOrders(id)
 		if len(orders) == 0 {
 			c.Header("Content-Type", "application/json")
-			c.JSON(http.StatusNotFound,
-				gin.H{
-					"status":    http.StatusNotFound,
-					"message: ": "No restaurants retrieved!",
-				},
-			)
+			c.JSON(http.StatusNotFound, header)
 			c.Abort()
 		} else {
 			c.JSON(http.StatusOK,
@@ -196,7 +191,7 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		resID := c.Param("resId")
 		oid, _ := strconv.ParseInt(orderID, 16, 64)
 		rid, _ := strconv.ParseInt(resID, 16, 64)
-		order := controllers.GetOrder(oid, rid)
+		order, _ := controllers.GetOrder(oid, rid)
 		if len(order) == 0 {
 			c.Header("Content-Type", "application/json")
 			c.JSON(http.StatusNotFound,
@@ -229,15 +224,10 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		c.BindJSON(&order)
 		rid, _ := strconv.ParseInt(order.resId, 16, 64)
 		oid, _ := strconv.ParseInt(order.orderId, 16, 64)
-		orderChanged := controllers.ChangeOrderStatus(oid, rid, order.status)
+		orderChanged, header := controllers.ChangeOrderStatus(oid, rid, order.status)
 		if !orderChanged {
 			c.Header("Content-Type", "application/json")
-			c.JSON(http.StatusNotFound,
-				gin.H{
-					"status":    http.StatusNotFound,
-					"message: ": "No restaurants retrieved!",
-				},
-			)
+			c.JSON(http.StatusNotFound, header)
 			c.Abort()
 		} else {
 			c.JSON(http.StatusOK,

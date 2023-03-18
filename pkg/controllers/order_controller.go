@@ -2,129 +2,122 @@ package controllers
 
 import (
 	"database/sql"
-	"fmt"
+	"net/http"
 
 	"github.com/SelfServiceCo/api/pkg/models"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func GetRestaurantOrders(rid int64) []models.Order {
+func GetRestaurantOrders(rid int64) ([]models.Order, gin.H) {
+	orders := []models.Order{}
+
 	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
 
 	if err != nil {
-		fmt.Println("Err", err.Error())
-		return nil
+		return orders, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error!"}
 	}
 
-	//
-	results, err := db.Query("SELECT * FROM orders WHERE RID = ? AND STATUS != 'DONE' AND STATUS != 'DENY'", rid)
+	results, err := db.Query("SELECT * FROM orders WHERE RID = ? AND orderStatus != 'DONE' AND orderStatus != 'DENY'", rid)
 	defer db.Close()
 
 	if err != nil {
-		fmt.Println("Err", err.Error())
-		return nil
+		return orders, gin.H{"status": http.StatusBadRequest, "message": "Selection Error!"}
 	}
 
-	orders := []models.Order{}
 	for results.Next() {
 		var order models.Order
 		err = results.Scan(&order.ID, &order.ResID, &order.UserID, &order.TableID, &order.Details, &order.Status)
 		if err != nil {
-			panic(err.Error())
+			return orders, gin.H{"status": http.StatusBadRequest, "message": "Scan Error!"}
 		}
 		orders = append(orders, order)
 	}
 
-	return orders
+	return orders, gin.H{"status": "success", "data": orders}
 }
 
-func ChangeOrderStatus(oid int64, rid int64, status string) bool {
+func ChangeOrderStatus(oid int64, rid int64, status string) (bool, gin.H) {
 	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
 
 	if err != nil {
-		fmt.Println("Err", err.Error())
-		return false
+		return false, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error!"}
 	}
 
-	_, err = db.Exec("UPDATE orders SET STATUS = ? WHERE RID = ? AND OID = ?", status, rid, oid)
+	result, err := db.Exec("UPDATE orders SET orderStatus = ? WHERE RID = ? AND OID = ?", status, rid, oid)
 	defer db.Close()
 
 	if err != nil {
-		fmt.Println("Err", err.Error())
-		return false
+		return false, gin.H{"status": http.StatusBadRequest, "message": "Update Error!"}
 	}
 
-	return true
+	return true, gin.H{"status": "success", "data": result}
 }
 
-func GetOrdersByUser(uid int64) []models.Order {
+func GetOrdersByUser(uid int64) ([]models.Order, gin.H) {
+	orders := []models.Order{}
+
 	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
 
 	if err != nil {
-		fmt.Println("Err", err.Error())
-		return nil
+		return orders, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error!"}
 	}
 
 	results, err := db.Query("SELECT * FROM orders WHERE UID = ?", uid)
 	defer db.Close()
 
 	if err != nil {
-		fmt.Println("Err", err.Error())
-		return nil
+		return orders, gin.H{"status": http.StatusBadRequest, "message": "Selection Error!"}
 	}
 
-	orders := []models.Order{}
 	for results.Next() {
 		var order models.Order
 		err = results.Scan(&order.ID, &order.ResID, &order.UserID, &order.TableID, &order.Details, &order.Status)
 		if err != nil {
-			panic(err.Error())
+			return orders, gin.H{"status": http.StatusBadRequest, "message": "Scan Error!"}
 		}
 		orders = append(orders, order)
 	}
 
-	return orders
+	return orders, gin.H{"status": "success", "data": orders}
 }
 
-func GetOrder(oid int64, rid int64) []models.Order {
+func GetOrder(oid int64, rid int64) ([]models.Order, gin.H) {
+	order := []models.Order{}
 	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
 	if err != nil {
-		fmt.Println("Err", err.Error())
-		return nil
+		return order, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error!"}
 	}
 
 	results, err := db.Query("SELECT * FROM orders WHERE ID = ? AND RID = ?", oid, rid)
 	if err != nil {
-		fmt.Println("Err", err.Error())
-		return nil
+		return order, gin.H{"status": http.StatusBadRequest, "message": "Selection Error!"}
+
 	}
-	order := []models.Order{}
+
 	for results.Next() {
 		var ord models.Order
 		err = results.Scan(&ord.ID, &ord.UserID, &ord.ResID, &ord.TableID, &ord.Details, &ord.Status)
 		if err != nil {
-			panic(err.Error())
+			return order, gin.H{"status": http.StatusBadRequest, "message": "Get Order Query Error!"}
 		}
 		order = append(order, ord)
 	}
-	return order
+	return order, gin.H{"status": "success", "data": order}
 }
 
-func CreateOrder(order models.Order) gin.H {
+func CreateOrder(c *gin.Context) (bool, gin.H) {
+	var orderRequest models.Order
+	if err := c.BindJSON(&orderRequest); err != nil {
+		c.AbortWithError(401, err)
+	}
 	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
 	if err != nil {
-		fmt.Println("Err", err.Error())
-		return nil
+		return false, gin.H{"status": http.StatusBadRequest, "message": "Database Connection Error!"}
 	}
+	results, err := db.Query("INSERT INTO orders (ID, user_id, RID, table_id, details, orderStatus) VALUES (?, ?, ?, ?, ?, ?)", 1, orderRequest.UserID, orderRequest.ResID, orderRequest.TableID, orderRequest.Details, orderRequest.Status)
 	if err != nil {
-		fmt.Println("Err", err.Error())
-		return nil
+		return false, gin.H{"status": http.StatusBadRequest, "message": "Insertion Error!"}
 	}
-	results, err := db.Query("INSERT INTO orders (ID, user_id, RID, table_id, details, status) VALUES (?, ?, ?, ?, ?)", order.ID, order.UserID, order.ResID, order.TableID, order.Details, order.Status)
-	if err != nil {
-		fmt.Println("Err", err.Error())
-		return nil
-	}
-	return gin.H{"status": "success", "data": results}
+	return true, gin.H{"status": "success", "data": results}
 }
