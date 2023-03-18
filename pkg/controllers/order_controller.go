@@ -18,9 +18,8 @@ func GetRestaurantOrders(rid int64) ([]models.Order, gin.H) {
 		return orders, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error!"}
 	}
 
-	results, err := db.Query("SELECT * FROM orders WHERE RID = ? AND orderStatus != 'DONE' AND orderStatus != 'DENY'", rid)
+	results, err := db.Query("SELECT * FROM orders WHERE restId = ? AND orderStatus != 'DONE' AND orderStatus != 'DENY'", rid)
 	defer db.Close()
-
 	if err != nil {
 		return orders, gin.H{"status": http.StatusBadRequest, "message": "Selection Error!"}
 	}
@@ -49,7 +48,7 @@ func ChangeOrderStatus(c *gin.Context) (bool, gin.H) {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "JSON Bind Error!"}
 	}
 
-	result, err := db.Exec("UPDATE orders SET orderStatus = ? WHERE RID = ? AND OID = ?", order.Status, order.ResID, order.ID)
+	result, err := db.Exec("UPDATE orders SET orderStatus = ? WHERE restId = ? AND ID = ?", order.Status, order.ResID, order.ID)
 	defer db.Close()
 
 	if err != nil {
@@ -68,7 +67,7 @@ func GetOrdersByUser(uid int64) ([]models.Order, gin.H) {
 		return orders, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error!"}
 	}
 
-	results, err := db.Query("SELECT * FROM orders WHERE UID = ?", uid)
+	results, err := db.Query("SELECT * FROM orders WHERE userId = ?", uid)
 	defer db.Close()
 
 	if err != nil {
@@ -94,7 +93,7 @@ func GetOrder(oid int64, rid int64) ([]models.Order, gin.H) {
 		return order, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error!"}
 	}
 
-	results, err := db.Query("SELECT * FROM orders WHERE ID = ? AND RID = ?", oid, rid)
+	results, err := db.Query("SELECT * FROM orders WHERE ID = ? AND restId = ?", oid, rid)
 	if err != nil {
 		return order, gin.H{"status": http.StatusBadRequest, "message": "Selection Error!"}
 
@@ -120,7 +119,7 @@ func CreateOrder(c *gin.Context) (bool, gin.H) {
 	if err != nil {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "Database Connection Error!"}
 	}
-	results, err := db.Query("INSERT INTO orders (ID, user_id, RID, table_id, details, orderStatus) VALUES (?, ?, ?, ?, ?, ?)", 1, orderRequest.UserID, orderRequest.ResID, orderRequest.TableID, orderRequest.Details, orderRequest.Status)
+	results, err := db.Query("INSERT INTO orders (ID, userId, restId, tableId, details, orderStatus) VALUES (?, ?, ?, ?, ?, ?)", 1, orderRequest.UserID, orderRequest.ResID, orderRequest.TableID, orderRequest.Details, orderRequest.Status)
 	if err != nil {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "Insertion Error!"}
 	}
