@@ -214,7 +214,7 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		}
 	})
 
-	restGroup.POST("/orders", func(c *gin.Context) {
+	restGroup.POST("/alterOrder", func(c *gin.Context) {
 		orderChanged, header := controllers.ChangeOrderStatus(c)
 		if !orderChanged {
 			c.Header("Content-Type", "application/json")

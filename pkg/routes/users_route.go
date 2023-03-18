@@ -13,7 +13,7 @@ func userRoute(rg *gin.RouterGroup) {
 	userGroup := rg.Group("/")
 	userGroup.Use(middleware.CORSMiddleware())
 
-	userGroup.GET("/:name", func(c *gin.Context) {
+	userGroup.GET("/name/:name", func(c *gin.Context) {
 		user := c.Params.ByName("name")
 		c.JSON(http.StatusOK, gin.H{"user": user})
 	})
@@ -38,8 +38,8 @@ func userRoute(rg *gin.RouterGroup) {
 		}
 	})
 
-	userGroup.GET("/orders", func(c *gin.Context) {
-		uid := c.Param("uid")
+	userGroup.GET("/:userId/orders", func(c *gin.Context) {
+		uid := c.Param("userId")
 		userId, _ := strconv.ParseInt(uid, 16, 64)
 		orders, header := controllers.GetOrdersByUser(userId)
 		if len(orders) == 0 {
