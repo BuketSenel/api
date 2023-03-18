@@ -111,7 +111,7 @@ func GetOrder(oid int64, rid int64) ([]models.Order, gin.H) {
 }
 
 func CreateOrder(c *gin.Context) (bool, gin.H) {
-	var orderRequest models.Order
+	orderRequest := models.Order{}
 	if err := c.BindJSON(&orderRequest); err != nil {
 		c.AbortWithError(401, err)
 	}
@@ -119,9 +119,9 @@ func CreateOrder(c *gin.Context) (bool, gin.H) {
 	if err != nil {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "Database Connection Error!"}
 	}
-	results, err := db.Query("INSERT INTO orders (ID, userId, restId, tableId, details, orderStatus) VALUES (?, ?, ?, ?, ?, ?)", 1, orderRequest.UserID, orderRequest.ResID, orderRequest.TableID, orderRequest.Details, orderRequest.Status)
+	results, err := db.Query("INSERT INTO orders (ID, userId, restId, tableId, details, orderStatus) VALUES (?, ?, ?, ?, ?, ?)", orderRequest.ID, orderRequest.UserID, orderRequest.ResID, orderRequest.TableID, orderRequest.Details, orderRequest.Status)
 	if err != nil {
-		return false, gin.H{"status": http.StatusBadRequest, "message": "Insertion Error!"}
+		return false, gin.H{"status": http.StatusBadRequest, "message": "Insertion Error!", "data": results}
 	}
 	return true, gin.H{"status": "success", "data": results}
 }
