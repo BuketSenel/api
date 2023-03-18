@@ -14,32 +14,36 @@ func getSigningKey() []byte {
 	return []byte("selfservice")
 }
 
-func CreateJWTToken() (string, error) {
-
+func CreateJWTToken(email string) (string, gin.H) {
+	role, uid, resid, header := getUser(email)
+	if header["status"] != 200 {
+		return "", header
+	}
 	SigningKey := getSigningKey()
+	user_id := strconv.FormatInt(int64(uid), 10)
+	rest_id := strconv.FormatInt(int64(resid), 10)
 	type selfClaims struct {
-		resID string `json:"resID"`
+		restId string `json:"resId"`
+		role   string `json:"role"`
+		uid    string `json:"uid"`
 		jwt.RegisteredClaims
 	}
 
-	// Create the claims
-	claims := selfClaims{
-		"bar",
+	jwt_claims := selfClaims{
+		role,
+		user_id,
+		rest_id,
 		jwt.RegisteredClaims{
-			// A usual scenario is to set the expiration time relative to the current time
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			NotBefore: jwt.NewNumericDate(time.Now()),
-			Subject:   "somebody",
-			ID:        "1",
-			Audience:  []string{"somebody_else"},
+			Subject:   email,
 		},
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt_claims)
 	ss, err := token.SignedString(SigningKey)
-	fmt.Printf("%v %v", ss, err)
-	return ss, err
+	return ss, gin.H{"status": 200, "message": "Token Created", "token": ss, "error": err}
 }
 
 func TokenValidation(c *gin.Context) error {

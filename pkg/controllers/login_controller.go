@@ -12,7 +12,6 @@ import (
 
 func Login(c *gin.Context) (string, gin.H) {
 	cred := models.Credential{}
-	var hashed string
 
 	if err := c.BindJSON(&cred); err != nil {
 		c.AbortWithError(401, err)
@@ -27,6 +26,7 @@ func Login(c *gin.Context) (string, gin.H) {
 		return "", gin.H{"status": http.StatusBadRequest, "message": "Connection Error!!"}
 	}
 
+	var hashed string
 	err = db.QueryRow("SELECT password from credentials WHERE email = ?", cred.Email).Scan(&hashed)
 	if err != nil {
 		fmt.Println("Selection Error!", err.Error())
@@ -38,10 +38,9 @@ func Login(c *gin.Context) (string, gin.H) {
 		return "", gin.H{"status": http.StatusBadRequest, "message": "Verification Error!"}
 	}
 
-	token, err := CreateJWTToken()
-
-	if err != nil {
-		return "", gin.H{"status": http.StatusBadRequest, "message": "Token Creation Error!"}
+	token, header := CreateJWTToken(cred.Email)
+	if header["status"] != 200 {
+		return "", header
 	}
 
 	results, err := db.Query("INSERT INTO credentials (token) VALUES (?) WHERE email = ?", token, cred.Email)
