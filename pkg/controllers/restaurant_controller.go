@@ -13,7 +13,7 @@ var selfdb = "selfservicedb"
 var conf = drivers.MysqlConfigLoad()
 
 func GetRestaurant(id int64) []models.Restaurant {
-	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
+	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice?parseTime=true")
 
 	if err != nil {
 		fmt.Println("Err", err.Error())

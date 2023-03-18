@@ -9,5 +9,6 @@ type Order struct {
 	TableID int64     `json:"tableId"`
 	Details string    `json:"details"`
 	Status  string    `json:"orderStatus"`
-	Created time.Time `json:"created"`
+	Created time.Time `json:"CREATED_AT"`
+	Updated time.Time `json:"UPDATED_AT"`
 }

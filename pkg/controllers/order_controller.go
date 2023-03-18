@@ -12,7 +12,7 @@ import (
 func GetRestaurantOrders(rid int64) ([]models.Order, gin.H) {
 	orders := []models.Order{}
 
-	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
+	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice?parseTime=true")
 
 	if err != nil {
 		return orders, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error!"}
@@ -25,10 +25,10 @@ func GetRestaurantOrders(rid int64) ([]models.Order, gin.H) {
 	}
 
 	for results.Next() {
-		var order models.Order
-		err = results.Scan(&order.ID, &order.ResID, &order.UserID, &order.TableID, &order.Details, &order.Status)
+		order := models.Order{}
+		err = results.Scan(&order.ID, &order.ResID, &order.UserID, &order.TableID, &order.Details, &order.Status, &order.Created, &order.Updated)
 		if err != nil {
-			return orders, gin.H{"status": http.StatusBadRequest, "message": "Scan Error!"}
+			return orders, gin.H{"status": http.StatusBadRequest, "message": "Scan Error!", "data": results, "Error": err.Error()}
 		}
 		orders = append(orders, order)
 	}
@@ -76,7 +76,7 @@ func GetOrdersByUser(uid int64) ([]models.Order, gin.H) {
 
 	for results.Next() {
 		var order models.Order
-		err = results.Scan(&order.ID, &order.ResID, &order.UserID, &order.TableID, &order.Details, &order.Status)
+		err = results.Scan(&order.ID, &order.ResID, &order.UserID, &order.TableID, &order.Details, &order.Status, &order.Created, &order.Updated)
 		if err != nil {
 			return orders, gin.H{"status": http.StatusBadRequest, "message": "Scan Error!"}
 		}
