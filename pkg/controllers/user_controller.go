@@ -14,7 +14,6 @@ func getUser(email string) (string, int64, int64, gin.H) {
 		return "", 0, 0, gin.H{"status": http.StatusBadRequest, "message": "Connection Error!!"}
 	}
 	result, err := db.Query("SELECT type, id, resId FROM users WHERE email = ?", email)
-	return "", 0, 0, gin.H{"status": http.StatusBadRequest, "message": result}
 
 	if err != nil {
 		return "", 0, 0, gin.H{"status": http.StatusBadRequest, "message": err.Error()}
