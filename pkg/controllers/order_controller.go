@@ -39,7 +39,7 @@ func GetRestaurantOrders(rid int64) ([]models.Order, gin.H) {
 func GetOrdersByUser(uid int64) ([]models.Order, gin.H) {
 	orders := []models.Order{}
 
-	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
+	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice?parseTime=true")
 
 	if err != nil {
 		return orders, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error!"}

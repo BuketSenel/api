@@ -12,11 +12,7 @@ import (
 
 func Login(c *gin.Context) (string, gin.H) {
 	cred := models.Credential{}
-
-	if err := c.BindJSON(&cred); err != nil {
-		c.AbortWithError(401, err)
-	}
-
+	c.BindJSON(&cred)
 	if cred.Email == "" || cred.Password == "" {
 		return "", gin.H{"status": http.StatusBadRequest, "message": "Please fill all the fields"}
 	}
@@ -45,7 +41,6 @@ func Login(c *gin.Context) (string, gin.H) {
 
 	results, err := db.Query("INSERT INTO credentials (token) VALUES (?) WHERE email = ?", token, cred.Email)
 	if err != nil {
-		fmt.Println("Selection Error!", err.Error())
 		return "", gin.H{"status": http.StatusBadRequest, "message": err, "data": results}
 	}
 

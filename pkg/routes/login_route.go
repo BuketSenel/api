@@ -11,7 +11,7 @@ import (
 func loginRoute(rg *gin.RouterGroup) {
 	logGroup := rg.Group("")
 	logGroup.Use(middleware.CORSMiddleware())
-	logGroup.Use(middleware.JwtAuthMiddleware())
+
 	logGroup.POST("", func(c *gin.Context) {
 		logGroup, header := controllers.Login(c)
 		if logGroup == "" {
