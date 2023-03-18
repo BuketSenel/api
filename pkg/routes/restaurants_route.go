@@ -215,16 +215,7 @@ func restaurantRoute(rg *gin.RouterGroup) {
 	})
 
 	restGroup.POST("/orders", func(c *gin.Context) {
-		type ChangeOrder struct {
-			orderId string `json:"orderId"`
-			resId   string `json:"resId"`
-			status  string `json:"status"`
-		}
-		order := new(ChangeOrder)
-		c.BindJSON(&order)
-		rid, _ := strconv.ParseInt(order.resId, 16, 64)
-		oid, _ := strconv.ParseInt(order.orderId, 16, 64)
-		orderChanged, header := controllers.ChangeOrderStatus(oid, rid, order.status)
+		orderChanged, header := controllers.ChangeOrderStatus(c)
 		if !orderChanged {
 			c.Header("Content-Type", "application/json")
 			c.JSON(http.StatusNotFound, header)

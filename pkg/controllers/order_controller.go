@@ -37,14 +37,19 @@ func GetRestaurantOrders(rid int64) ([]models.Order, gin.H) {
 	return orders, gin.H{"status": "success", "data": orders}
 }
 
-func ChangeOrderStatus(oid int64, rid int64, status string) (bool, gin.H) {
+func ChangeOrderStatus(c *gin.Context) (bool, gin.H) {
 	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
 
 	if err != nil {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error!"}
 	}
 
-	result, err := db.Exec("UPDATE orders SET orderStatus = ? WHERE RID = ? AND OID = ?", status, rid, oid)
+	order := models.Order{}
+	if err := c.BindJSON(&order); err != nil {
+		return false, gin.H{"status": http.StatusBadRequest, "message": "JSON Bind Error!"}
+	}
+
+	result, err := db.Exec("UPDATE orders SET orderStatus = ? WHERE RID = ? AND OID = ?", order.Status, order.ResID, order.ID)
 	defer db.Close()
 
 	if err != nil {
