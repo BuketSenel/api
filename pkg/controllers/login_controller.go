@@ -38,8 +38,8 @@ func Login(c *gin.Context) (string, gin.H) {
 	if header["status"] != 200 {
 		return "", header
 	}
+	results, err := db.Exec("UPDATE credentials SET token = ? WHERE email = ?", token, cred.Email)
 
-	results, err := db.Query("INSERT INTO credentials (token) VALUES (?) WHERE email = ?", token, cred.Email)
 	if err != nil {
 		return "", gin.H{"status": http.StatusBadRequest, "message": err, "data": results}
 	}

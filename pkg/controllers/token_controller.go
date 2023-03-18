@@ -20,19 +20,21 @@ func CreateJWTToken(email string) (string, gin.H) {
 		return "", header
 	}
 	SigningKey := getSigningKey()
-	user_id := strconv.FormatInt(int64(uid), 10)
-	rest_id := strconv.FormatInt(int64(resid), 10)
+
 	type selfClaims struct {
-		restId string `json:"resId"`
-		role   string `json:"role"`
-		uid    string `json:"uid"`
+		RestId string `json:"resId"`
+		Role   string `json:"role"`
+		Uid    string `json:"uid"`
 		jwt.RegisteredClaims
 	}
 
+	user_id := strconv.FormatInt(int64(uid), 10)
+	rest_id := strconv.FormatInt(int64(resid), 10)
+
 	jwt_claims := selfClaims{
+		rest_id,
 		role,
 		user_id,
-		rest_id,
 		jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

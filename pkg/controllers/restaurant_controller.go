@@ -82,7 +82,7 @@ func GetRestaurantStaff(rid int64) []models.User {
 		return nil
 	}
 
-	results, err := db.Query("SELECT * FROM users WHERE RID = ?", rid)
+	results, err := db.Query("SELECT * FROM users WHERE resID = ?", rid)
 	defer db.Close()
 
 	if err != nil {

@@ -38,20 +38,22 @@ func SaveRestaurant(r models.Restaurant, c *gin.Context) (bool, error) {
 	}
 	hashedPass := PasswordHash(fmt.Sprint(r.Password))
 
-	query_restaurant := "INSERT INTO restaurants (name, address, district, city, country, phone, email) values (?,?,?,?,?,?,?,?)"
+	query_restaurant := "INSERT INTO restaurants (name, address, district, city, country, phone, email) values (?,?,?,?,?,?,?)"
 	results, err := db.ExecContext(c, query_restaurant, string(r.Name), string(r.Address), string(r.District), string(r.City), string(r.Country), string(r.Phone), string(r.Email))
 	if results == nil || err != nil {
 		return false, err
 	}
 
-	resID, err := db.Query("SELECT restId FROM restaurants WHERE email = ?", string(r.Email))
+	resID, err := db.Query("SELECT id FROM restaurants WHERE email = ?", string(r.Email))
 	var restID int
-	resID.Scan(&restID)
-	if resID == nil || err != nil {
+	for resID.Next() {
+		err = resID.Scan(&restID)
+	}
+	if err != nil {
 		return false, err
 	}
 	query_user := "INSERT INTO users (name, password, phone, email, resID, type) values (?,?,?,?,?,?)"
-	result_user, err := db.ExecContext(c, query_user, string(r.Name), hashedPass, string(r.Phone), string(r.Email), resID, "MANAGER")
+	result_user, err := db.ExecContext(c, query_user, string(r.Name), hashedPass, string(r.Phone), string(r.Email), restID, "MANAGER")
 	if result_user == nil || err != nil {
 		return false, err
 	}
