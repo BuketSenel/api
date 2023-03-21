@@ -233,6 +233,44 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		}
 	})
 
+	restGroup.POST("/addStaff", func(c *gin.Context) {
+		staffCreated, header := controllers.AddStaff(c)
+		if !staffCreated {
+			c.Header("Content-Type", "application/json")
+			c.JSON(http.StatusNotFound, header)
+			c.Abort()
+		} else {
+			c.JSON(http.StatusOK,
+				gin.H{
+					"status":  "200",
+					"message": "OK",
+					"items":   staffCreated,
+					"offset":  "0",
+					"limit":   "25",
+				},
+			)
+		}
+	})
+
+	restGroup.DELETE("/deleteStaff", func(c *gin.Context) {
+		staffDeleted, header := controllers.DeleteStaff(c)
+		if !staffDeleted {
+			c.Header("Content-Type", "application/json")
+			c.JSON(http.StatusNotFound, header)
+			c.Abort()
+		} else {
+			c.JSON(http.StatusOK,
+				gin.H{
+					"status":  "200",
+					"message": "OK",
+					"items":   staffDeleted,
+					"offset":  "0",
+					"limit":   "25",
+				},
+			)
+		}
+	})
+
 	restGroup.GET("/:resId/staff", func(c *gin.Context) {
 		resID := c.Param("resId")
 		rid, _ := strconv.ParseInt(resID, 16, 64)

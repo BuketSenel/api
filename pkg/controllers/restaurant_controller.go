@@ -6,6 +6,7 @@ import (
 
 	"github.com/SelfServiceCo/api/pkg/drivers"
 	"github.com/SelfServiceCo/api/pkg/models"
+	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -101,4 +102,44 @@ func GetRestaurantStaff(rid int64) []models.User {
 	}
 
 	return staff
+}
+
+func AddStaff(c *gin.Context) (bool, gin.H) {
+	user := models.User{}
+
+	if err := c.BindJSON(&user); err != nil {
+		c.AbortWithError(401, err)
+	}
+
+	if user.Name == "" || user.Phone == "" || user.Email == "" || user.Password == "" || user.ResID == 0 || user.Type == "" {
+		return false, gin.H{"error": "Please fill all the fields"}
+	}
+
+	result, err := SaveUser(user, c)
+
+	if !result || err != nil {
+		return result, err
+	}
+
+	return true, gin.H{"message": "Staff registered successfully"}
+}
+
+func DeleteStaff(c *gin.Context) (bool, gin.H) {
+	user := models.User{}
+
+	if err := c.BindJSON(&user); err != nil {
+		c.AbortWithError(401, err)
+	}
+
+	if user.ID == 0 {
+		return false, gin.H{"error": "Please fill all the fields"}
+	}
+
+	//result, err := DeleteUser(user, c)
+
+	//if !result || err != nil {
+	//	return result, err
+	//}
+
+	return true, gin.H{"message": "Staff deleted successfully"}
 }
