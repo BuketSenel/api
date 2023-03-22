@@ -101,7 +101,7 @@ func GetOrder(oid int64, rid int64) ([]models.Order, gin.H) {
 
 	for results.Next() {
 		var ord models.Order
-		err = results.Scan(&ord.OrderItemID, &ord.ProductName, &ord.ProductDesc, &ord.TableID, &ord.Quantity, &ord.Status)
+		err = results.Scan(&ord.OrderItemID, &ord.PName, &ord.PDesc, &ord.TableID, &ord.Quantity, &ord.Status)
 		if err != nil {
 			return order, gin.H{"status": http.StatusBadRequest, "message": "Get Order Query Error!"}
 		}
