@@ -93,7 +93,7 @@ func GetOrder(oid int64, rid int64) ([]models.Order, gin.H) {
 		return order, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error!"}
 	}
 
-	results, err := db.Query("SELECT * FROM orders WHERE ID = ? AND restId = ?", oid, rid)
+	results, err := db.Query("SELECT order_item_id, PNAME, PDESC, table_id, quantity, orderStatus FROM products JOIN orders ON `orders`.`product_id` = `products`.`ID` WHERE `orders`.`rest_id` = (?) AND `orders`.`order_id` = (?)", rid, oid)
 	if err != nil {
 		return order, gin.H{"status": http.StatusBadRequest, "message": "Selection Error!"}
 
@@ -101,7 +101,7 @@ func GetOrder(oid int64, rid int64) ([]models.Order, gin.H) {
 
 	for results.Next() {
 		var ord models.Order
-		err = results.Scan(&ord.ID, &ord.UserID, &ord.ResID, &ord.TableID, &ord.Details, &ord.Status)
+		err = results.Scan(&ord.OrderItemID, &ord.ProductName, &ord.ProductDesc, &ord.TableID, &ord.Quantity, &ord.Status)
 		if err != nil {
 			return order, gin.H{"status": http.StatusBadRequest, "message": "Get Order Query Error!"}
 		}
