@@ -17,7 +17,7 @@ func RestaurantRegister(c *gin.Context) (bool, gin.H) {
 		c.AbortWithError(401, err)
 	}
 
-	if custQuery.RestName == "" || custQuery.Address == "" || custQuery.District == "" || custQuery.City == "" || custQuery.Country == "" || custQuery.Email == "" || custQuery.Password == "" || custQuery.UserPhone == "" {
+	if custQuery.RestName == "" || custQuery.Address == "" || custQuery.District == "" || custQuery.City == "" || custQuery.Country == "" || custQuery.Email == "" || custQuery.Password == "" || custQuery.RestPhone == "" || custQuery.UserPhone == "" {
 		fmt.Println("Registration Error!")
 		return false, gin.H{"status": http.StatusBadRequest, "message": "Please fill all the fields"}
 	}
@@ -39,7 +39,7 @@ func SaveRestaurant(cq models.CustomQuery, c *gin.Context) (bool, error) {
 	}
 	hashedPass := PasswordHash(fmt.Sprint(cq.Password))
 
-	query_restaurant := "INSERT INTO restaurants (rest_name, address, district, city, country, rest_phone) values (?,?,?,?,?,?,?)"
+	query_restaurant := "INSERT INTO restaurants (rest_name, address, district, city, country, rest_phone) values (?,?,?,?,?,?)"
 	results, err := db.ExecContext(c, query_restaurant, string(cq.RestName), string(cq.Address), string(cq.District), string(cq.City), string(cq.Country), string(cq.RestPhone))
 	if results == nil || err != nil {
 		return false, err
