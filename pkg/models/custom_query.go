@@ -5,11 +5,12 @@ import "time"
 type CustomQuery struct {
 	UserID             int64     `json:"user_id"`
 	UserName           string    `json:"user_name"`
-	UserPassword       string    `json:"password"`
-	UserPhone          string    `json:"phone"`
-	UserEmail          string    `json:"email"`
-	ResID              int64     `json:"rest_id"`
-	Name               string    `json:"rest_name"`
+	Password           string    `json:"password"`
+	UserPhone          string    `json:"user_phone"`
+	Email              string    `json:"email"`
+	RestID             int64     `json:"rest_id"`
+	RestName           string    `json:"rest_name"`
+	RestPhone          string    `json:"rest_phone"`
 	Summary            string    `json:"summary"`
 	Logo               string    `json:"logo"`
 	Address            string    `json:"address"`

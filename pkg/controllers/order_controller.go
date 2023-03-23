@@ -19,7 +19,7 @@ func GetRestaurantOrders(rid int64) ([]models.Order, gin.H) {
 		return orders, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error!"}
 	}
 
-	results, err := db.Query("SELECT order_item_id, prod_name, prod_desc, table_id, quantity, order_status FROM products JOIN orders ON `orders`.`prod_id` = `products`.`ID` WHERE `orders`.`rest_id` = (?) AND `orders`.`order_status` != 'Deny'", rid)
+	results, err := db.Query("SELECT order_item_id, prod_name, prod_desc, table_id, quantity, order_status FROM products JOIN orders ON `orders`.`prod_id` = products.prod_id WHERE `orders`.`rest_id` = (?) AND `orders`.`order_status` != 'Deny'", rid)
 	if err != nil {
 		return orders, gin.H{"status": http.StatusBadRequest, "message": "Selection Error!"}
 	}
@@ -93,7 +93,7 @@ func GetOrder(oid int64, rid int64) ([]models.Order, gin.H) {
 		return order, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error!"}
 	}
 
-	results, err := db.Query("SELECT order_item_id, prod_name, prod_desc, table_id, quantity, order_status FROM products JOIN orders ON `orders`.`prod_id` = `products`.`ID` WHERE `orders`.`rest_id` = (?) AND `orders`.`order_id` = (?)", rid, oid)
+	results, err := db.Query("SELECT order_item_id, prod_name, prod_desc, table_id, quantity, order_status FROM products JOIN orders ON orders.prod_id = products.prod_id WHERE `orders`.`rest_id` = (?) AND `orders`.`order_id` = (?)", rid, oid)
 	if err != nil {
 		return order, gin.H{"status": http.StatusBadRequest, "message": "Selection Error!"}
 
