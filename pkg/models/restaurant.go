@@ -12,7 +12,6 @@ type Restaurant struct {
 	City      string    `json:"city"`
 	Country   string    `json:"country"`
 	Phone     string    `json:"rest_phone"`
-	Email     string    `json:"email"`
 	Tags      string    `json:"tags"`
 	CreatedAt time.Time `json:"rest_created_at"`
 	UpdatedAt time.Time `json:"rest_updated_at"`

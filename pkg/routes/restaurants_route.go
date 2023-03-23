@@ -15,14 +15,10 @@ func restaurantRoute(rg *gin.RouterGroup) {
 	restGroup.GET("/:resId", func(c *gin.Context) {
 		resID := c.Param("resId")
 		id, _ := strconv.ParseInt(resID, 16, 64)
-		restaurant := controllers.GetRestaurant(id)
+		restaurant, header := controllers.GetRestaurant(id)
 		if len(restaurant) == 0 {
 			c.Header("Content-Type", "application/json")
-			c.JSON(http.StatusNotFound,
-				gin.H{
-					"status":    http.StatusNotFound,
-					"message: ": "Restaurant not found!",
-				})
+			c.JSON(http.StatusNotFound, header)
 			c.Abort()
 		} else {
 			c.JSON(http.StatusOK,
@@ -140,15 +136,10 @@ func restaurantRoute(rg *gin.RouterGroup) {
 	})
 
 	restGroup.GET("", func(c *gin.Context) {
-		restaurant := controllers.GetTopRestaurants()
-		if len(restaurant) == 0 {
+		restaurant, header := controllers.GetTopRestaurants()
+		if restaurant == nil {
 			c.Header("Content-Type", "application/json")
-			c.JSON(http.StatusNotFound,
-				gin.H{
-					"status":    http.StatusNotFound,
-					"message: ": "No restaurants retrieved!",
-				},
-			)
+			c.JSON(http.StatusNotFound, gin.H{"status": header})
 			c.Abort()
 		} else {
 			c.JSON(http.StatusOK,
@@ -168,7 +159,7 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		resID := c.Param("resId")
 		id, _ := strconv.ParseInt(resID, 16, 64)
 		orders, header := controllers.GetRestaurantOrders(id)
-		if len(orders) == 0 {
+		if *orders == nil {
 			c.Header("Content-Type", "application/json")
 			c.JSON(http.StatusNotFound, header)
 			c.Abort()
@@ -177,8 +168,8 @@ func restaurantRoute(rg *gin.RouterGroup) {
 				gin.H{
 					"status":  "200",
 					"message": "OK",
-					"size":    len(orders),
-					"items":   orders,
+					"size":    len(*orders),
+					"items":   *orders,
 					"offset":  "0",
 					"limit":   "25",
 				},
@@ -192,7 +183,7 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		oid, _ := strconv.ParseInt(orderID, 16, 64)
 		rid, _ := strconv.ParseInt(resID, 16, 64)
 		order, _ := controllers.GetOrder(oid, rid)
-		if len(order) == 0 {
+		if *order == nil {
 			c.Header("Content-Type", "application/json")
 			c.JSON(http.StatusNotFound,
 				gin.H{
@@ -205,8 +196,8 @@ func restaurantRoute(rg *gin.RouterGroup) {
 				gin.H{
 					"status":  http.StatusOK,
 					"message": "OK",
-					"size":    len(order),
-					"items":   order,
+					"size":    len(*order),
+					"items":   *order,
 					"offset":  "0",
 					"limit":   "25",
 				},

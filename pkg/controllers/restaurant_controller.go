@@ -3,6 +3,7 @@ package controllers
 import (
 	"database/sql"
 	"fmt"
+	"net/http"
 
 	"github.com/SelfServiceCo/api/pkg/drivers"
 	"github.com/SelfServiceCo/api/pkg/models"
@@ -14,66 +15,59 @@ import (
 var selfdb = "selfservicedb"
 var conf = drivers.MysqlConfigLoad()
 
-func GetRestaurant(id int64) []models.Restaurant {
+func GetRestaurant(id int64) ([]models.Restaurant, gin.H) {
 	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice?parseTime=true")
 
 	if err != nil {
-		fmt.Println("Err", err.Error())
-		return nil
+		return nil, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Get Restaurant"}
 	}
 
 	results, err := db.Query("SELECT * FROM restaurants WHERE rest_id = ?", id)
-	defer db.Close()
 
 	if err != nil {
-		fmt.Println("Err", err.Error())
-		return nil
+		return nil, gin.H{"status": http.StatusBadRequest, "message": "Selection Error! Get Restaurant"}
 	}
 
 	restaurant := []models.Restaurant{}
 	for results.Next() {
-		var rest models.Restaurant
-
-		err = results.Scan(&rest.ID, &rest.Name, &rest.Summary, &rest.Logo, &rest.Address, &rest.District,
-			&rest.City, &rest.Country, &rest.Phone, &rest.Tags, &rest.CreatedAt, &rest.UpdatedAt)
+		rest := models.Restaurant{}
+		err = results.Scan(&rest.ID, &rest.Name, &rest.Summary, &rest.Logo, &rest.Address, &rest.District, &rest.City, &rest.Country, &rest.Phone, &rest.Tags, &rest.CreatedAt, &rest.UpdatedAt)
 		if err != nil {
-			panic(err.Error())
+			return nil, gin.H{"status": http.StatusBadRequest, "message": "Scan Error! Get Restaurant", "data": results, "Error": err.Error()}
 		}
 		restaurant = append(restaurant, rest)
 	}
+	defer db.Close()
 
-	return restaurant
+	return restaurant, gin.H{"status": http.StatusOK, "message": restaurant}
 }
 
-func GetTopRestaurants() []models.Restaurant {
-	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
+func GetTopRestaurants() ([]models.Restaurant, gin.H) {
+	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice?parseTime=true")
 
 	if err != nil {
-		fmt.Println("Err", err.Error())
-		return nil
+		return nil, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Get Top Restaurant"}
 	}
 
 	results, err := db.Query("SELECT * FROM restaurants")
-	defer db.Close()
 
 	if err != nil {
-		fmt.Println("Err", err.Error())
-		return nil
+		return nil, gin.H{"status": http.StatusBadRequest, "message": "Selection Error! Get Top Restaurant"}
 	}
 
 	restaurants := []models.Restaurant{}
 	for results.Next() {
 		var rest models.Restaurant
 
-		err = results.Scan(&rest.ID, &rest.Name, &rest.Summary, &rest.Logo, &rest.Address, &rest.District,
-			&rest.City, &rest.Country, &rest.Phone, &rest.Tags, &rest.CreatedAt, &rest.UpdatedAt)
+		err = results.Scan(&rest.ID, &rest.Name, &rest.Summary, &rest.Logo, &rest.Address, &rest.District, &rest.City, &rest.Country, &rest.Phone, &rest.Tags, &rest.CreatedAt, &rest.UpdatedAt)
 		if err != nil {
-			panic(err.Error())
+			return nil, gin.H{"status": http.StatusBadRequest, "message": "Scan Error! Get Top Restaurant", "data": results, "Error": err.Error()}
 		}
 		restaurants = append(restaurants, rest)
 	}
+	defer db.Close()
 
-	return restaurants
+	return restaurants, gin.H{"status": http.StatusOK, "message": restaurants}
 }
 
 func GetRestaurantStaff(rid int64) []models.User {
