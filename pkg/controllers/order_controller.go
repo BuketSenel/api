@@ -10,31 +10,31 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func GetRestaurantOrders(rid int64) ([]models.Order, gin.H) {
-	orders := []models.Order{}
+func GetRestaurantOrders(rid int64) (*[]models.CustomQuery, gin.H) {
+	customQuery := []models.CustomQuery{}
 
 	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice?parseTime=true")
 
 	if err != nil {
-		return orders, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error!"}
+		return nil, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error!"}
 	}
 
 	results, err := db.Query("SELECT order_item_id, prod_name, prod_desc, table_id, quantity, order_status FROM products JOIN orders ON `orders`.`prod_id` = products.prod_id WHERE `orders`.`rest_id` = (?) AND `orders`.`order_status` != 'Deny'", rid)
 	if err != nil {
-		return orders, gin.H{"status": http.StatusBadRequest, "message": "Selection Error!"}
+		return nil, gin.H{"status": http.StatusBadRequest, "message": "Selection Error!"}
 	}
 
 	for results.Next() {
-		order := models.Order{}
-		err = results.Scan(&order.OrderItemID, &order.ProductName, &order.ProductDesc, &order.TableID, &order.Quantity, &order.Status)
+		cq := models.CustomQuery{}
+		err = results.Scan(&cq.OrderItemID, &cq.ProductName, &cq.ProductDescription, &cq.TableID, &cq.Quantity, &cq.Status)
 		if err != nil {
-			return orders, gin.H{"status": http.StatusBadRequest, "message": "Scan Error!", "data": results, "Error": err.Error()}
+			return nil, gin.H{"status": http.StatusBadRequest, "message": "Scan Error!", "data": results, "Error": err.Error()}
 		}
-		orders = append(orders, order)
+		customQuery = append(customQuery, cq)
 	}
 	defer db.Close()
 
-	return orders, gin.H{"status": "success", "data": orders}
+	return &customQuery, gin.H{"status": "success", "data": customQuery}
 }
 
 func GetOrdersByUser(uid int64) ([]models.Order, gin.H) {
@@ -54,7 +54,7 @@ func GetOrdersByUser(uid int64) ([]models.Order, gin.H) {
 
 	for results.Next() {
 		order := models.Order{}
-		err = results.Scan(&order.ID, &order.UserID, &order.ResID, &order.TableID, &order.Details, &order.Status, &order.CreatedAt, &order.UpdatedAt)
+		err = results.Scan(&order.ID, &order.OrderItemID, &order.ResID, &order.TableID, &order.UserID, &order.ProductId, &order.Price, &order.Quantity, &order.Status)
 		if err != nil {
 			return orders, gin.H{"status": http.StatusBadRequest, "message": "Scan Error!", "data": results, "Error": err.Error()}
 		}
@@ -86,29 +86,29 @@ func ChangeOrderStatus(c *gin.Context) (bool, gin.H) {
 	return true, gin.H{"status": "success", "data": result}
 }
 
-func GetOrder(oid int64, rid int64) ([]models.Order, gin.H) {
-	order := []models.Order{}
+func GetOrder(oid int64, rid int64) (*[]models.CustomQuery, gin.H) {
+	customQuery := []models.CustomQuery{}
 	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
 	if err != nil {
-		return order, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error!"}
+		return nil, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error!"}
 	}
 
 	results, err := db.Query("SELECT order_item_id, prod_name, prod_desc, table_id, quantity, order_status FROM products JOIN orders ON orders.prod_id = products.prod_id WHERE `orders`.`rest_id` = (?) AND `orders`.`order_id` = (?)", rid, oid)
 	if err != nil {
-		return order, gin.H{"status": http.StatusBadRequest, "message": "Selection Error!"}
+		return nil, gin.H{"status": http.StatusBadRequest, "message": "Selection Error!"}
 
 	}
 
 	for results.Next() {
-		var ord models.Order
-		err = results.Scan(&ord.OrderItemID, &ord.ProductName, &ord.ProductDesc, &ord.TableID, &ord.Quantity, &ord.Status)
+		cq := models.CustomQuery{}
+		err = results.Scan(&cq.OrderItemID, &cq.ProductName, &cq.ProductDescription, &cq.TableID, &cq.Quantity, &cq.Status)
 		if err != nil {
-			return order, gin.H{"status": http.StatusBadRequest, "message": "Get Order Query Error!"}
+			return nil, gin.H{"status": http.StatusBadRequest, "message": "Get Order Query Error!"}
 		}
-		order = append(order, ord)
+		customQuery = append(customQuery, cq)
 	}
 	defer db.Close()
-	return order, gin.H{"status": "success", "data": order}
+	return &customQuery, gin.H{"status": "success", "data": customQuery}
 }
 
 func CreateOrder(c *gin.Context) (bool, gin.H) {

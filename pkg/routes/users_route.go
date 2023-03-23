@@ -42,7 +42,7 @@ func userRoute(rg *gin.RouterGroup) {
 		uid := c.Param("userId")
 		userId, _ := strconv.ParseInt(uid, 16, 64)
 		orders, header := controllers.GetOrdersByUser(userId)
-		if len(orders) == 0 {
+		if orders == nil {
 			c.Header("Content-Type", "application/json")
 			c.JSON(http.StatusNotFound, header)
 			c.Abort()
