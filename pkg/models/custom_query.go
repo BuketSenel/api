@@ -33,7 +33,7 @@ type CustomQuery struct {
 	CatImage           string    `json:"cat_image"`
 	Price              float32   `json:"price"`
 	Currency           string    `json:"currency"`
-	PrepDurationMin    int8      `json:"prepDurationMinute"`
+	PrepDurationMin    int8      `json:"prep_dur_minute"`
 	OrderID            string    `json:"order_id"`
 	OrderItemID        int64     `json:"order_item_id"`
 	TableID            int64     `json:"table_id"`
