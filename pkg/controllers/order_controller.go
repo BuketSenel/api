@@ -19,14 +19,14 @@ func GetRestaurantOrders(rid int64) ([]models.Order, gin.H) {
 		return orders, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error!"}
 	}
 
-	results, err := db.Query("SELECT order_item_id, PNAME, PDESC, table_id, quantity, order_status FROM products JOIN orders ON `orders`.`product_id` = `products`.`ID` WHERE `orders`.`rest_id` = (?) AND `orders`.`order_status` != 'Deny'", rid)
+	results, err := db.Query("SELECT order_item_id, prod_name, prod_desc, table_id, quantity, order_status FROM products JOIN orders ON `orders`.`prod_id` = `products`.`ID` WHERE `orders`.`rest_id` = (?) AND `orders`.`order_status` != 'Deny'", rid)
 	if err != nil {
 		return orders, gin.H{"status": http.StatusBadRequest, "message": "Selection Error!"}
 	}
 
 	for results.Next() {
 		order := models.Order{}
-		err = results.Scan(&order.OrderItemID, &order.PName, &order.PDesc, &order.TableID, &order.Quantity, &order.Status)
+		err = results.Scan(&order.OrderItemID, &order.ProductName, &order.ProductDesc, &order.TableID, &order.Quantity, &order.Status)
 		if err != nil {
 			return orders, gin.H{"status": http.StatusBadRequest, "message": "Scan Error!", "data": results, "Error": err.Error()}
 		}
@@ -46,7 +46,7 @@ func GetOrdersByUser(uid int64) ([]models.Order, gin.H) {
 		return orders, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error!"}
 	}
 
-	results, err := db.Query("SELECT * FROM orders WHERE userId=?", uid)
+	results, err := db.Query("SELECT * FROM orders WHERE user_id=?", uid)
 	defer db.Close()
 	if err != nil {
 		return orders, gin.H{"status": http.StatusBadRequest, "message": "Selection Error!"}
@@ -54,7 +54,7 @@ func GetOrdersByUser(uid int64) ([]models.Order, gin.H) {
 
 	for results.Next() {
 		order := models.Order{}
-		err = results.Scan(&order.ID, &order.UserID, &order.ResID, &order.TableID, &order.Details, &order.Status, &order.Created, &order.Updated)
+		err = results.Scan(&order.ID, &order.UserID, &order.ResID, &order.TableID, &order.Details, &order.Status, &order.CreatedAt, &order.UpdatedAt)
 		if err != nil {
 			return orders, gin.H{"status": http.StatusBadRequest, "message": "Scan Error!", "data": results, "Error": err.Error()}
 		}
@@ -93,7 +93,7 @@ func GetOrder(oid int64, rid int64) ([]models.Order, gin.H) {
 		return order, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error!"}
 	}
 
-	results, err := db.Query("SELECT order_item_id, PNAME, PDESC, table_id, quantity, order_status FROM products JOIN orders ON `orders`.`product_id` = `products`.`ID` WHERE `orders`.`rest_id` = (?) AND `orders`.`order_id` = (?)", rid, oid)
+	results, err := db.Query("SELECT order_item_id, prod_name, prod_desc, table_id, quantity, order_status FROM products JOIN orders ON `orders`.`prod_id` = `products`.`ID` WHERE `orders`.`rest_id` = (?) AND `orders`.`order_id` = (?)", rid, oid)
 	if err != nil {
 		return order, gin.H{"status": http.StatusBadRequest, "message": "Selection Error!"}
 
@@ -101,7 +101,7 @@ func GetOrder(oid int64, rid int64) ([]models.Order, gin.H) {
 
 	for results.Next() {
 		var ord models.Order
-		err = results.Scan(&ord.OrderItemID, &ord.PName, &ord.PDesc, &ord.TableID, &ord.Quantity, &ord.Status)
+		err = results.Scan(&ord.OrderItemID, &ord.ProductName, &ord.ProductDesc, &ord.TableID, &ord.Quantity, &ord.Status)
 		if err != nil {
 			return order, gin.H{"status": http.StatusBadRequest, "message": "Get Order Query Error!"}
 		}
@@ -127,7 +127,7 @@ func CreateOrder(c *gin.Context) (bool, gin.H) {
 	}
 
 	for i := 0; i < len(products); i++ {
-		results, err := db.Query("INSERT INTO orders (order_id, rest_id, table_id, user_id, product_id, price, quantity, order_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", orderRequest.ID, orderRequest.ResID, orderRequest.TableID, orderRequest.UserID, products[i].ID, products[i].Price, products[i].Quantity, orderRequest.Status)
+		results, err := db.Query("INSERT INTO orders (order_id, rest_id, table_id, user_id, prod_id, price, quantity, order_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", orderRequest.ID, orderRequest.ResID, orderRequest.TableID, orderRequest.UserID, products[i].ID, products[i].Price, products[i].Quantity, orderRequest.Status)
 		if err != nil {
 			return false, gin.H{"status": http.StatusBadRequest, "message": "Insertion Error!", "data": err.Error(), "results": results}
 		}

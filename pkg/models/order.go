@@ -10,9 +10,9 @@ type Order struct {
 	TableID     int64     `json:"table_id"`
 	Details     string    `json:"details"`
 	Status      string    `json:"order_status"`
-	PName       string    `json:"pname"`
-	PDesc       string    `json:"pdesc"`
+	ProductName string    `json:"prod_name"`
+	ProductDesc string    `json:"prod_desc"`
 	Quantity    string    `json:"quantity"`
-	Created     time.Time `json:"CREATED_AT"`
-	Updated     time.Time `json:"UPDATED_AT"`
+	CreatedAt   time.Time `json:"order_created_at"`
+	UpdatedAt   time.Time `json:"order_updated_at"`
 }

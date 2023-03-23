@@ -10,6 +10,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
+// bu nedir?
 var selfdb = "selfservicedb"
 var conf = drivers.MysqlConfigLoad()
 
@@ -21,7 +22,7 @@ func GetRestaurant(id int64) []models.Restaurant {
 		return nil
 	}
 
-	results, err := db.Query("SELECT * FROM restaurants WHERE ID = ?", id)
+	results, err := db.Query("SELECT * FROM restaurants WHERE rest_id = ?", id)
 	defer db.Close()
 
 	if err != nil {
@@ -83,7 +84,7 @@ func GetRestaurantStaff(rid int64) []models.User {
 		return nil
 	}
 
-	results, err := db.Query("SELECT * FROM users WHERE resID = ?", rid)
+	results, err := db.Query("SELECT * FROM users WHERE rest_id = ?", rid)
 	defer db.Close()
 
 	if err != nil {

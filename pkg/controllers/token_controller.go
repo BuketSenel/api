@@ -22,7 +22,7 @@ func CreateJWTToken(email string) (string, gin.H) {
 	SigningKey := getSigningKey()
 
 	type selfClaims struct {
-		RestId string `json:"resId"`
+		RestId string `json:"rest_id"`
 		Role   string `json:"role"`
 		Uid    string `json:"uid"`
 		jwt.RegisteredClaims
@@ -53,7 +53,7 @@ func TokenValidation(c *gin.Context) error {
 	tokenStr := TokenExtraction(c)
 	_, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 		return []byte(SigningKey), nil
 	})
@@ -81,7 +81,7 @@ func TokenIDExtraction(c *gin.Context) (uint, error) {
 	tokenString := TokenExtraction(c)
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 		return []byte(SigningKey), nil
 	})

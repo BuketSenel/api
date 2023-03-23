@@ -37,7 +37,7 @@ func SaveUser(user models.User, c *gin.Context) (bool, gin.H) {
 	}
 	hashedPass := PasswordHash(user.Password)
 
-	query := "INSERT INTO users (name, password, phone, email, resID, type) values (?,?,?,?,?,?)"
+	query := "INSERT INTO users (user_name, password, phone, email, rest_id, type) values (?,?,?,?,?,?)"
 	results, err := db.ExecContext(c, query, user.Name, hashedPass, user.Phone, user.Email, user.ResID, user.Type)
 	if err != nil {
 		message := gin.H{"status": http.StatusBadRequest, "message": results}
@@ -52,5 +52,5 @@ func SaveUser(user models.User, c *gin.Context) (bool, gin.H) {
 		message := gin.H{"status": http.StatusBadRequest, "message": err.Error()}
 		return false, message
 	}
-	return true, gin.H{"message": "Success", "status": http.StatusOK}
+	return true, gin.H{"message": "Success", "status": http.StatusOK, "data": results}
 }

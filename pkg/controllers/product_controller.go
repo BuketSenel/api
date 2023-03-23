@@ -3,6 +3,7 @@ package controllers
 import (
 	"database/sql"
 	"fmt"
+
 	"github.com/SelfServiceCo/api/pkg/models"
 )
 
@@ -13,7 +14,7 @@ func ProductsByCategories(cid int64, rid int64) []models.Product {
 		fmt.Println("Err", err.Error())
 		return nil
 	}
-	results, err := db.Query("SELECT * FROM products WHERE CID = ? AND RID = ?", cid, rid)
+	results, err := db.Query("SELECT * FROM products WHERE cat_id = ? AND rest_id = ?", cid, rid)
 	defer db.Close()
 
 	if err != nil {
@@ -41,7 +42,7 @@ func ProductsByRestaurants(rid int64) []models.Product {
 		fmt.Println("Err", err.Error())
 		return nil
 	}
-	results, err := db.Query("SELECT * FROM products WHERE RID = ?", rid)
+	results, err := db.Query("SELECT * FROM products WHERE rest_id = ?", rid)
 	defer db.Close()
 
 	if err != nil {

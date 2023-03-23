@@ -17,7 +17,7 @@ func GetRestaurantTables(resID int64, tableId int64) []models.Table {
 	}
 
 	if tableId != 0 {
-		results, err := db.Query("SELECT * FROM tables WHERE RID = ? AND id = ?", resID, tableId)
+		results, err := db.Query("SELECT * FROM tables WHERE rest_id = ? AND table_id = ?", resID, tableId)
 		defer db.Close()
 
 		if err != nil {
@@ -36,7 +36,7 @@ func GetRestaurantTables(resID int64, tableId int64) []models.Table {
 
 		return tables
 	}
-	results, err := db.Query("SELECT * FROM tables WHERE RID = ?", resID)
+	results, err := db.Query("SELECT * FROM tables WHERE rest_id = ?", resID)
 	defer db.Close()
 
 	if err != nil {
