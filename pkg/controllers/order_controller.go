@@ -46,7 +46,7 @@ func GetOrdersByUser(uid int64) ([]models.Order, gin.H) {
 		return orders, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error!"}
 	}
 
-	results, err := db.Query("SELECT * FROM orders WHERE user_id=?", uid)
+	results, err := db.Query("SELECT * FROM orders WHERE user_id = ?", uid)
 	defer db.Close()
 	if err != nil {
 		return orders, gin.H{"status": http.StatusBadRequest, "message": "Selection Error!"}
@@ -73,10 +73,10 @@ func ChangeOrderStatus(c *gin.Context) (bool, gin.H) {
 
 	order := models.Order{}
 	if err := c.BindJSON(&order); err != nil {
-		return false, gin.H{"status": http.StatusBadRequest, "message": "JSON Bind Error!"}
+		return false, gin.H{"status": http.StatusBadRequest, "message": "JSON Bind Error! Change Order Status"}
 	}
 
-	result, err := db.Exec("UPDATE orders SET order_status = ? WHERE rest_id = ? AND order_id = ?", order.Status, order.ResID, order.ID)
+	result, err := db.Exec("UPDATE orders SET order_status = ? WHERE rest_id = ? AND order_item_id = ?", order.Status, order.ResID, order.OrderItemID)
 	defer db.Close()
 
 	if err != nil {
