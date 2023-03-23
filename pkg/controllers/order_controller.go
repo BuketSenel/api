@@ -19,14 +19,14 @@ func GetRestaurantOrders(rid int64) ([]models.Order, gin.H) {
 		return orders, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error!"}
 	}
 
-	results, err := db.Query("SELECT order_item_id, PNAME, PDESC, table_id, quantity FROM products JOIN orders ON `orders`.`product_id` = `products`.`ID` WHERE `orders`.`rest_id` = (?) AND `orders`.`order_status` != 'Deny'", rid)
+	results, err := db.Query("SELECT order_item_id, PNAME, PDESC, table_id, quantity, order_status FROM products JOIN orders ON `orders`.`product_id` = `products`.`ID` WHERE `orders`.`rest_id` = (?) AND `orders`.`order_status` != 'Deny'", rid)
 	if err != nil {
 		return orders, gin.H{"status": http.StatusBadRequest, "message": "Selection Error!"}
 	}
 
 	for results.Next() {
 		order := models.Order{}
-		err = results.Scan(&order.OrderItemID, &order.PName, &order.PDesc, &order.TableID, &order.Quantity)
+		err = results.Scan(&order.OrderItemID, &order.PName, &order.PDesc, &order.TableID, &order.Quantity, &order.Status)
 		if err != nil {
 			return orders, gin.H{"status": http.StatusBadRequest, "message": "Scan Error!", "data": results, "Error": err.Error()}
 		}
@@ -76,7 +76,7 @@ func ChangeOrderStatus(c *gin.Context) (bool, gin.H) {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "JSON Bind Error!"}
 	}
 
-	result, err := db.Exec("UPDATE orders SET orderStatus = ? WHERE restId = ? AND ID = ?", order.Status, order.ResID, order.ID)
+	result, err := db.Exec("UPDATE orders SET order_status = ? WHERE rest_id = ? AND order_id = ?", order.Status, order.ResID, order.ID)
 	defer db.Close()
 
 	if err != nil {
@@ -93,7 +93,7 @@ func GetOrder(oid int64, rid int64) ([]models.Order, gin.H) {
 		return order, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error!"}
 	}
 
-	results, err := db.Query("SELECT order_item_id, PNAME, PDESC, table_id, quantity, orderStatus FROM products JOIN orders ON `orders`.`product_id` = `products`.`ID` WHERE `orders`.`rest_id` = (?) AND `orders`.`order_id` = (?)", rid, oid)
+	results, err := db.Query("SELECT order_item_id, PNAME, PDESC, table_id, quantity, order_status FROM products JOIN orders ON `orders`.`product_id` = `products`.`ID` WHERE `orders`.`rest_id` = (?) AND `orders`.`order_id` = (?)", rid, oid)
 	if err != nil {
 		return order, gin.H{"status": http.StatusBadRequest, "message": "Selection Error!"}
 
