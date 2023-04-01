@@ -361,7 +361,7 @@ func restaurantRoute(rg *gin.RouterGroup) {
 
 	restGroup.POST("/categories", func(c *gin.Context) {
 		category, header := controllers.CreateCategory(c)
-		if !category {
+		if category == 0 {
 			c.Header("Content-Type", "application/json")
 			c.JSON(http.StatusNotFound, header)
 			c.Abort()

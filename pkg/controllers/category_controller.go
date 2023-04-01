@@ -66,25 +66,27 @@ func CategoriesByRestaurant(rid int64) []models.Category {
 	return categories
 }
 
-func CreateCategory(c *gin.Context) (bool, gin.H) {
+func CreateCategory(c *gin.Context) (int64, gin.H) {
 	category := models.Category{}
 	err := c.BindJSON(&category)
 	if err != nil {
-		return false, gin.H{"status": http.StatusBadRequest, "message": "Bind Error! Create Product Category"}
+		return 0, gin.H{"status": http.StatusBadRequest, "message": "Bind Error! Create Product Category"}
 	}
 
 	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
 
 	if err != nil {
-		return false, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Create Product Category"}
+		return 0, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Create Product Category"}
 	}
 
 	results, err := db.Query("INSERT INTO categories (cat_name, rest_id, cat_desc, cat_image, parent_cat_id) VALUES (?,?,?,?,?)", category.Name, category.RID, category.Description, category.Image, category.ParentCatID)
 	defer db.Close()
 
 	if err != nil {
-		return false, gin.H{"status": http.StatusBadRequest, "message": "Insertion Error! Create Product Category"}
+		return 0, gin.H{"status": http.StatusBadRequest, "message": "Insertion Error! Create Product Category"}
 	}
 
-	return true, gin.H{"status": http.StatusOK, "message": "Product category created!", "data": results}
+	result := db.QueryRow("SELECT LAST_INSERT_ID()").Scan(&category.ID)
+
+	return category.ID, gin.H{"status": http.StatusOK, "message": "Product category created!", "data": results, "result": result}
 }
