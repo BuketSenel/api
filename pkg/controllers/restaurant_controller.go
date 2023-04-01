@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"database/sql"
-	"fmt"
 	"net/http"
 
 	"github.com/SelfServiceCo/api/pkg/drivers"
@@ -11,7 +10,6 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-// bu nedir?
 var selfdb = "selfservicedb"
 var conf = drivers.MysqlConfigLoad()
 
@@ -70,33 +68,31 @@ func GetTopRestaurants() ([]models.Restaurant, gin.H) {
 	return restaurants, gin.H{"status": http.StatusOK, "message": restaurants}
 }
 
-func GetRestaurantStaff(rid int64) []models.User {
-	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
+func GetRestaurantStaff(rid int64) ([]models.User, gin.H) {
+	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice?parseTime=true")
 
 	if err != nil {
-		fmt.Println("Err", err.Error())
-		return nil
+		return nil, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Get Staff"}
 	}
 
-	results, err := db.Query("SELECT * FROM users WHERE rest_id = ?", rid)
+	results, err := db.Query("SELECT user_id, user_name, user_phone, email, rest_id, type, user_created_at  FROM users WHERE rest_id = ?", rid)
 	defer db.Close()
 
 	if err != nil {
-		fmt.Println("Err", err.Error())
-		return nil
+		return nil, gin.H{"status": http.StatusBadRequest, "message": "Selection Error! Get Staff"}
 	}
 
 	staff := []models.User{}
 	for results.Next() {
 		var user models.User
-		err = results.Scan(&user.ID, &user.Name, &user.Email, &user.ResID, &user.Type, &user.CreatedAt, &user.UpdatedAt)
+		err = results.Scan(&user.ID, &user.Name, &user.Phone, &user.Email, &user.ResID, &user.Type, &user.CreatedAt)
 		if err != nil {
-			panic(err.Error())
+			return nil, gin.H{"status": http.StatusBadRequest, "message": "Scan Error! Get Staff", "data": results, "Error": err.Error()}
 		}
 		staff = append(staff, user)
 	}
 
-	return staff
+	return staff, gin.H{"status": http.StatusOK, "message": staff}
 }
 
 func AddStaff(c *gin.Context) (bool, gin.H) {
