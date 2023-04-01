@@ -46,7 +46,8 @@ func GetOrdersByUser(uid int64) ([]models.Order, gin.H) {
 		return orders, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error!"}
 	}
 
-	results, err := db.Query("SELECT * FROM orders WHERE user_id = ?", uid)
+	// Price'ı products'tan mı alalım orders'dan mı şu an products'tan alıyoruz
+	results, err := db.Query("SELECT user_id, order_id, order_item_id, prod_name, table_id, quantity, order_status, orders.rest_id, products.price FROM products JOIN orders ON `orders`.`prod_id` = products.prod_id WHERE `orders`.`user_id` = (?);", uid)
 	defer db.Close()
 	if err != nil {
 		return orders, gin.H{"status": http.StatusBadRequest, "message": "Selection Error!"}
@@ -54,7 +55,7 @@ func GetOrdersByUser(uid int64) ([]models.Order, gin.H) {
 
 	for results.Next() {
 		order := models.Order{}
-		err = results.Scan(&order.ID, &order.OrderItemID, &order.ResID, &order.TableID, &order.UserID, &order.ProductId, &order.Price, &order.Quantity, &order.Status)
+		err = results.Scan(&order.UserID, &order.ID, &order.OrderItemID, &order.ProductName, &order.TableID, &order.Quantity, &order.Status, &order.ResID, &order.Price)
 		if err != nil {
 			return orders, gin.H{"status": http.StatusBadRequest, "message": "Scan Error!", "data": results, "Error": err.Error()}
 		}
@@ -116,10 +117,10 @@ func CreateOrder(c *gin.Context) (bool, gin.H) {
 	products := []models.Product{}
 
 	if err := c.BindJSON(&orderRequest); err != nil {
-		c.AbortWithError(401, err)
+		return false, gin.H{"status": http.StatusBadRequest, "message": "Bind Error! Create Order"}
 	}
 	if err := json.Unmarshal([]byte(orderRequest.Details), &products); err != nil {
-		c.AbortWithError(401, err)
+		return false, gin.H{"status": http.StatusBadRequest, "message": "Unmarshal Error! Create Order"}
 	}
 	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
 	if err != nil {
