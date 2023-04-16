@@ -161,3 +161,46 @@ func GetWaiterTables(rid int64, waiterID int64) ([]models.Table, gin.H) {
 
 	return tables, gin.H{"status": http.StatusOK, "message": tables}
 }
+
+func GetWaiterOrdersByTable(rid int64, tableID int64) ([]models.Order, []models.Product, gin.H) {
+	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice?parseTime=true")
+
+	if err != nil {
+		return nil, nil, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Get Orders"}
+	}
+
+	results, err := db.Query("SELECT prod_id, order_status FROM orders WHERE rest_id = ? and table_id = ? and order_status NOT IN ('done', 'paid')", rid, tableID)
+	defer db.Close()
+
+	if err != nil {
+		return nil, nil, gin.H{"status": http.StatusBadRequest, "message": err.Error()}
+	}
+
+	orders := []models.Order{}
+	for results.Next() {
+		var order models.Order
+		err = results.Scan(&order.ProductId, &order.Status)
+		if err != nil {
+			return nil, nil, gin.H{"status": http.StatusBadRequest, "message": "Scan Error! Get Orders", "data": results, "Error": err.Error()}
+		}
+		orders = append(orders, order)
+	}
+
+	products := []models.Product{}
+	for i := 0; i < len(orders); i++ {
+		results, err := db.Query("SELECT prod_name, prep_dur_minute FROM products WHERE prod_id = ? and rest_id  = ?", orders[i].ProductId, rid)
+		if err != nil {
+			return nil, nil, gin.H{"status": http.StatusBadRequest, "message": err.Error()}
+		}
+		for results.Next() {
+			var product models.Product
+			err = results.Scan(&product.Name, &product.PrepDurationMin)
+			if err != nil {
+				return nil, nil, gin.H{"status": http.StatusBadRequest, "message": "Scan Error! Get Orders", "data": results, "Error": err.Error()}
+			}
+			products = append(products, product)
+		}
+	}
+
+	return orders, products, gin.H{"status": http.StatusOK, "orders": orders, "products": products}
+}
