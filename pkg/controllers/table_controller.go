@@ -29,7 +29,7 @@ func GetRestaurantTables(resID int64, tableId int64) []models.Table {
 		tables := []models.Table{}
 		for results.Next() {
 			var table models.Table
-			err = results.Scan(&table.ID, &table.ResID, &table.QR)
+			err = results.Scan(&table.TableNo, &table.RestID, &table.QR)
 			if err != nil {
 				panic(err.Error())
 			}
@@ -48,7 +48,7 @@ func GetRestaurantTables(resID int64, tableId int64) []models.Table {
 	tables := []models.Table{}
 	for results.Next() {
 		var table models.Table
-		err = results.Scan(&table.ID, &table.ResID, &table.QR)
+		err = results.Scan(&table.TableNo, &table.RestID, &table.QR)
 		if err != nil {
 			panic(err.Error())
 		}
@@ -74,9 +74,8 @@ func GetTable(tableId int64) (models.Table, gin.H) {
 		return table, gin.H{"error": err.Error()}
 	}
 
-	
 	for results.Next() {
-		err = results.Scan(&table.ID, &table.ResID, &table.QR)
+		err = results.Scan(&table.TableNo, &table.RestID, &table.QR)
 		if err != nil {
 			return table, gin.H{"error": err.Error()}
 		}
@@ -122,7 +121,7 @@ func AddTable(table models.Table) (bool, gin.H) {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Add Table"}
 	}
 
-	_, err = db.Exec("INSERT INTO tables (rest_id, qr) VALUES (?, ?)", table.ResID, table.QR)
+	_, err = db.Exec("INSERT INTO tables (rest_id, qr) VALUES (?, ?)", table.RestID, table.QR)
 	defer db.Close()
 
 	if err != nil {

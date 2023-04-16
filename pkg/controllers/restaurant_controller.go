@@ -134,3 +134,30 @@ func DeleteStaff(c *gin.Context) (bool, gin.H) {
 
 	return true, gin.H{"message": "Staff deleted successfully"}
 }
+
+func GetWaiterTables(rid int64, waiterID int64) ([]models.Table, gin.H) {
+	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice?parseTime=true")
+
+	if err != nil {
+		return nil, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Get Tables"}
+	}
+
+	results, err := db.Query("SELECT table_no FROM tables WHERE rest_id = ? and waiter_id = ?", rid, waiterID)
+	defer db.Close()
+
+	if err != nil {
+		return nil, gin.H{"status": http.StatusBadRequest, "message": "Selection Error! Get Tables"}
+	}
+
+	tables := []models.Table{}
+	for results.Next() {
+		var table models.Table
+		err = results.Scan(&table.TableNo)
+		if err != nil {
+			return nil, gin.H{"status": http.StatusBadRequest, "message": "Scan Error! Get Tables", "data": results, "Error": err.Error()}
+		}
+		tables = append(tables, table)
+	}
+
+	return tables, gin.H{"status": http.StatusOK, "message": tables}
+}
