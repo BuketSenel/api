@@ -113,7 +113,13 @@ func OrdersByTable(tableId int64) ([]models.CustomQuery, gin.H) {
 	return customQuery, gin.H{"status": http.StatusOK, "message": "success", "data": results}
 }
 
-func AddTable(rid int64, tid int64) (bool, gin.H) {
+func AddTable(c *gin.Context) (bool, gin.H) {
+	table := models.Table{}
+	err := c.BindJSON(&table)
+
+	if err != nil {
+		return false, gin.H{"status": http.StatusBadRequest, "message": "Bind Error! Create Product"}
+	}
 
 	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
 
@@ -122,14 +128,13 @@ func AddTable(rid int64, tid int64) (bool, gin.H) {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Add Table"}
 	}
 
-	var table = models.Table{}
 	var header = gin.H{}
-	table.QR, header = CreateQRCode(tid, rid)
+	table.QR, header = CreateQRCode(table.TableNo, table.RestID)
 	if header["status"] != http.StatusOK {
 		return false, header
 	}
 
-	_, err = db.Exec("INSERT INTO tables (table_no, rest_id, qr) VALUES (?)", tid, rid, table.QR)
+	_, err = db.Exec("INSERT INTO tables (table_no, rest_id, qr) VALUES (?)", table.TableNo, table.RestID, table.QR)
 	defer db.Close()
 
 	if err != nil {

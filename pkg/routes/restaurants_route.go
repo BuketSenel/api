@@ -444,4 +444,24 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		}
 
 	})
+
+	restGroup.GET("/tables", func(c *gin.Context) {
+		tables, header := controllers.AddTable(c)
+		if !tables {
+			c.Header("Content-Type", "application/json")
+			c.JSON(http.StatusNotFound, header)
+			c.Abort()
+		} else {
+			c.JSON(http.StatusOK,
+				gin.H{
+					"status":  "200",
+					"message": "OK",
+					"items":   tables,
+					"offset":  "0",
+					"limit":   "25",
+				},
+			)
+		}
+
+	})
 }
