@@ -38,10 +38,11 @@ func userRoute(rg *gin.RouterGroup) {
 		}
 	})
 
-	userGroup.GET("/:userId/orders", func(c *gin.Context) {
+	userGroup.GET("/:userId/orders/:status", func(c *gin.Context) {
 		uid := c.Param("userId")
-		userId, _ := strconv.ParseInt(uid, 16, 64)
-		orders, header := controllers.GetOrdersByUser(userId)
+		status := c.Param("status")
+		userId, _ := strconv.ParseInt(uid, 10, 64)
+		orders, header := controllers.GetOrdersByUser(userId, status)
 		if orders == nil {
 			c.Header("Content-Type", "application/json")
 			c.JSON(http.StatusNotFound, header)
