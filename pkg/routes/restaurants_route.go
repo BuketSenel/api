@@ -403,7 +403,7 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		tableID := c.Param("tableID")
 		rid, _ := strconv.ParseInt(restID, 10, 64)
 		tid, _ := strconv.ParseInt(tableID, 10, 64)
-		orders, products, header := controllers.GetWaiterOrdersByTable(rid, tid)
+		orders, header := controllers.GetWaiterOrdersByTable(rid, tid)
 		if len(orders) == 0 {
 			c.Header("Content-Type", "application/json")
 			c.JSON(http.StatusNotFound, header)
@@ -411,13 +411,12 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		} else {
 			c.JSON(http.StatusOK,
 				gin.H{
-					"status":   "200",
-					"message":  "OK",
-					"size":     len(orders),
-					"orders":   orders,
-					"products": products,
-					"offset":   "0",
-					"limit":    "25",
+					"status":  "200",
+					"message": "OK",
+					"size":    len(orders),
+					"orders":  orders,
+					"offset":  "0",
+					"limit":   "25",
 				},
 			)
 		}

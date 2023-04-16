@@ -7,6 +7,7 @@ import (
 
 	"github.com/SelfServiceCo/api/pkg/models"
 	"github.com/gin-gonic/gin"
+	qrcode "github.com/skip2/go-qrcode"
 )
 
 func GetRestaurantTables(resID int64, tableId int64) []models.Table {
@@ -124,7 +125,9 @@ func AddTable(rid int64, tid int64) (bool, gin.H) {
 	var table = models.Table{}
 	var header = gin.H{}
 	table.QR, header = CreateQRCode(tid, rid)
-	fmt.Println("status", header)
+	if header["status"] != http.StatusOK {
+		return false, header
+	}
 
 	_, err = db.Exec("INSERT INTO tables (table_no, rest_id, qr) VALUES (?)", tid, rid, table.QR)
 	defer db.Close()
@@ -137,9 +140,12 @@ func AddTable(rid int64, tid int64) (bool, gin.H) {
 	return true, gin.H{"status": http.StatusOK, "message": "success"}
 }
 
-func CreateQRCode(tid int64, rid int64) (string, gin.H) {
-
+func CreateQRCode(tid int64, rid int64) ([]byte, gin.H) {
 	var table = models.Table{}
-	table.QR = "QR" + string(tid) + string(rid) + "deneme"
+	var err error
+	table.QR, err = qrcode.Encode(string(tid)+":"+string(rid), qrcode.Medium, 256)
+	if err != nil {
+		return nil, gin.H{"status": http.StatusBadRequest, "message": "QR Code Error! Create QR Code"}
+	}
 	return table.QR, gin.H{"status": http.StatusOK, "message": "success"}
 }
