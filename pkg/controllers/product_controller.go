@@ -81,10 +81,8 @@ func CreateProduct(c *gin.Context) (bool, gin.H) {
 
 	results, err := db.Query("INSERT INTO products (prod_name, prod_desc, cat_id, rest_id, prod_image, price, currency, prep_dur_minute) VALUES (?,?,?,?,?,?,?,?)", product.Name, product.Description, product.CatID, product.ResID, product.Image, product.Price, product.Currency, product.PrepDurationMin)
 	defer db.Close()
-
 	if err != nil {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "Insertion Error! Create Product"}
 	}
-
 	return true, gin.H{"status": http.StatusOK, "message": "Product created!", "data": results}
 }

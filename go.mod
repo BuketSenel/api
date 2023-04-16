@@ -9,6 +9,7 @@ require (
 )
 
 require (
+	github.com/aws/aws-sdk-go v1.44.234 // indirect
 	github.com/bytedance/sonic v1.8.2 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20221115062448-fe3a3abad311 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
@@ -18,6 +19,7 @@ require (
 	github.com/goccy/go-json v0.10.0 // indirect
 	github.com/golang-jwt/jwt/v5 v5.0.0-rc.1 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
+	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.4 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect

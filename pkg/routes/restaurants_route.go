@@ -37,14 +37,10 @@ func restaurantRoute(rg *gin.RouterGroup) {
 	restGroup.GET("/:resId/categories", func(c *gin.Context) {
 		resID := c.Param("resId")
 		id, _ := strconv.ParseInt(resID, 16, 64)
-		categories := controllers.CategoriesByRestaurant(id)
+		categories, header := controllers.CategoriesByRestaurant(id)
 		if len(categories) == 0 {
 			c.Header("Content-Type", "application/json")
-			c.JSON(http.StatusNotFound,
-				gin.H{
-					"status":    http.StatusNotFound,
-					"message: ": "No categories found!",
-				})
+			c.JSON(http.StatusNotFound, header)
 			c.Abort()
 		} else {
 			c.JSON(http.StatusOK,

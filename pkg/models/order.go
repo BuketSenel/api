@@ -13,7 +13,7 @@ type Order struct {
 	ProductId   int64     `json:"prod_id"`
 	ProductName string    `json:"prod_name"`
 	Price       float32   `json:"price"`
-	Quantity    string    `json:"quantity"`
+	Quantity    string    `json:"count"`
 	CreatedAt   time.Time `json:"order_created_at"`
 	UpdatedAt   time.Time `json:"order_updated_at"`
 }
