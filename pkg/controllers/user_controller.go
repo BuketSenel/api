@@ -28,3 +28,30 @@ func getUser(email string) (string, int64, int64, gin.H) {
 	}
 	return user.Type, user.ID, user.ResID, gin.H{"status": http.StatusOK, "message": "Success"}
 }
+
+func GetRestaurantWaiters(rid int64) ([]models.User, gin.H) {
+	var users = []models.User{}
+	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
+
+	if err != nil {
+		return nil, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Get Waiters"}
+	}
+
+	results, err := db.Query("SELECT user_name FROM users WHERE rest_id = ? and type = 'waiter'", rid)
+	defer db.Close()
+
+	if err != nil {
+		return nil, gin.H{"status": http.StatusBadRequest, "message": "DB Query Error! Get Waiters"}
+	}
+
+	for results.Next() {
+		var user models.User
+		err = results.Scan(&user.Name)
+		if err != nil {
+			return nil, gin.H{"status": http.StatusBadRequest, "message": "DB Scan Error! Get Waiters"}
+		}
+		users = append(users, user)
+	}
+
+	return users, gin.H{"status": http.StatusOK, "message": "success", "data": results}
+}

@@ -422,4 +422,27 @@ func restaurantRoute(rg *gin.RouterGroup) {
 			)
 		}
 	})
+
+	restGroup.GET("/waiters/:restID", func(c *gin.Context) {
+		restID := c.Param("restID")
+		rid, _ := strconv.ParseInt(restID, 10, 64)
+		waiters, header := controllers.GetRestaurantWaiters(rid)
+		if waiters == nil {
+			c.Header("Content-Type", "application/json")
+			c.JSON(http.StatusNotFound, header)
+			c.Abort()
+		} else {
+			c.JSON(http.StatusOK,
+				gin.H{
+					"status":  "200",
+					"message": "OK",
+					"size":    len(waiters),
+					"items":   waiters,
+					"offset":  "0",
+					"limit":   "25",
+				},
+			)
+		}
+
+	})
 }

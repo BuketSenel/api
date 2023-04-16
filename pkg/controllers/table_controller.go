@@ -112,7 +112,7 @@ func OrdersByTable(tableId int64) ([]models.CustomQuery, gin.H) {
 	return customQuery, gin.H{"status": http.StatusOK, "message": "success", "data": results}
 }
 
-func AddTable(table models.Table) (bool, gin.H) {
+func AddTable(rid int64, tid int64) (bool, gin.H) {
 
 	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
 
@@ -121,7 +121,12 @@ func AddTable(table models.Table) (bool, gin.H) {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Add Table"}
 	}
 
-	_, err = db.Exec("INSERT INTO tables (rest_id, qr) VALUES (?, ?)", table.RestID, table.QR)
+	var table = models.Table{}
+	var header = gin.H{}
+	table.QR, header = CreateQRCode(tid, rid)
+	fmt.Println("status", header)
+
+	_, err = db.Exec("INSERT INTO tables (table_no, rest_id, qr) VALUES (?)", tid, rid, table.QR)
 	defer db.Close()
 
 	if err != nil {
@@ -130,4 +135,11 @@ func AddTable(table models.Table) (bool, gin.H) {
 	}
 
 	return true, gin.H{"status": http.StatusOK, "message": "success"}
+}
+
+func CreateQRCode(tid int64, rid int64) (string, gin.H) {
+
+	var table = models.Table{}
+	table.QR = "QR" + string(tid) + string(rid) + "deneme"
+	return table.QR, gin.H{"status": http.StatusOK, "message": "success"}
 }
