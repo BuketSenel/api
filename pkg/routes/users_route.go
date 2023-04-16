@@ -38,9 +38,9 @@ func userRoute(rg *gin.RouterGroup) {
 		}
 	})
 
-	userGroup.GET("/:userId/orders/:status", func(c *gin.Context) {
+	userGroup.GET("/:userId/orders", func(c *gin.Context) {
 		uid := c.Param("userId")
-		status := c.Param("status")
+		status := c.Query("status")
 		userId, _ := strconv.ParseInt(uid, 10, 64)
 		orders, header := controllers.GetOrdersByUser(userId, status)
 		if orders == nil {
