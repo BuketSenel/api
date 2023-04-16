@@ -374,11 +374,11 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		}
 	})
 
-	restGroup.GET("/:restID/waiter/:waiterID/tables", func(c *gin.Context) {
+	restGroup.GET("/tables/:restID/waiter/:waiterID", func(c *gin.Context) {
 		restID := c.Param("restID")
 		waiterID := c.Param("waiterID")
-		rid, _ := strconv.ParseInt(restID, 16, 64)
-		tid, _ := strconv.ParseInt(waiterID, 16, 64)
+		rid, _ := strconv.ParseInt(restID, 10, 64)
+		tid, _ := strconv.ParseInt(waiterID, 10, 64)
 		tables, header := controllers.GetWaiterTables(rid, tid)
 		if len(tables) == 0 {
 			c.Header("Content-Type", "application/json")
