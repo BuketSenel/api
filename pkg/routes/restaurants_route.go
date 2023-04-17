@@ -281,17 +281,12 @@ func restaurantRoute(rg *gin.RouterGroup) {
 	})
 
 	restGroup.GET("/:resId/tables", func(c *gin.Context) {
-		resID := c.Param("resID")
-		rid, _ := strconv.ParseInt(resID, 16, 64)
-		tables := controllers.GetRestaurantTables(rid, 0)
-		if len(tables) == 0 {
+		resID := c.Param("resId")
+		rid, _ := strconv.ParseInt(resID, 10, 64)
+		tables, header := controllers.GetRestaurantTables(rid, 0)
+		if tables == nil {
 			c.Header("Content-Type", "application/json")
-			c.JSON(http.StatusNotFound,
-				gin.H{
-					"status":    http.StatusNotFound,
-					"message: ": "No staff found!",
-				},
-			)
+			c.JSON(http.StatusNotFound, header)
 			c.Abort()
 		} else {
 			c.JSON(http.StatusOK,
@@ -310,17 +305,12 @@ func restaurantRoute(rg *gin.RouterGroup) {
 	restGroup.GET("/:resId/tables/:tableID", func(c *gin.Context) {
 		resID := c.Param("resID")
 		tableID := c.Param("tableID")
-		rid, _ := strconv.ParseInt(resID, 16, 64)
-		tid, _ := strconv.ParseInt(tableID, 16, 64)
-		tables := controllers.GetRestaurantTables(rid, tid)
+		rid, _ := strconv.ParseInt(resID, 10, 64)
+		tid, _ := strconv.ParseInt(tableID, 10, 64)
+		tables, header := controllers.GetRestaurantTables(rid, tid)
 		if len(tables) == 0 {
 			c.Header("Content-Type", "application/json")
-			c.JSON(http.StatusNotFound,
-				gin.H{
-					"status":    http.StatusNotFound,
-					"message: ": "No staff found!",
-				},
-			)
+			c.JSON(http.StatusNotFound, header)
 			c.Abort()
 		} else {
 			c.JSON(http.StatusOK,
@@ -445,22 +435,26 @@ func restaurantRoute(rg *gin.RouterGroup) {
 
 	})
 
-	restGroup.GET("/tables", func(c *gin.Context) {
+	restGroup.POST("/tables", func(c *gin.Context) {
 		tables, header := controllers.AddTable(c)
 		if !tables {
 			c.Header("Content-Type", "application/json")
 			c.JSON(http.StatusNotFound, header)
 			c.Abort()
 		} else {
-			c.JSON(http.StatusOK,
-				gin.H{
-					"status":  "200",
-					"message": "OK",
-					"items":   tables,
-					"offset":  "0",
-					"limit":   "25",
-				},
-			)
+			c.JSON(http.StatusOK, header)
+		}
+
+	})
+
+	restGroup.POST("/tables/assign", func(c *gin.Context) {
+		tables, header := controllers.AssignWaiter(c)
+		if !tables {
+			c.Header("Content-Type", "application/json")
+			c.JSON(http.StatusNotFound, header)
+			c.Abort()
+		} else {
+			c.JSON(http.StatusOK, header)
 		}
 
 	})

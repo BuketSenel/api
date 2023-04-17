@@ -10,53 +10,50 @@ import (
 	qrcode "github.com/skip2/go-qrcode"
 )
 
-func GetRestaurantTables(resID int64, tableId int64) []models.Table {
+func GetRestaurantTables(resID int64, tableId int64) ([]models.Table, gin.H) {
 
 	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
 
 	if err != nil {
-		fmt.Println("Err", err.Error())
-		return nil
+		return nil, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Get Restaurant Tables"}
 	}
 
 	if tableId != 0 {
-		results, err := db.Query("SELECT * FROM tables WHERE rest_id = ? AND table_id = ?", resID, tableId)
+		results, err := db.Query("SELECT * FROM tables WHERE rest_id = ? AND table_no = ?", resID, tableId)
 		defer db.Close()
 
 		if err != nil {
-			fmt.Println("Err", err.Error())
-			return nil
+			return nil, gin.H{"status": http.StatusBadRequest, "message": "Query Error! Get Restaurant Tables"}
 		}
 		tables := []models.Table{}
 		for results.Next() {
 			var table models.Table
-			err = results.Scan(&table.TableNo, &table.RestID, &table.QR)
+			err = results.Scan(&table.RestID, &table.TableNo, &table.WaiterID, &table.QR)
 			if err != nil {
-				panic(err.Error())
+				return nil, gin.H{"status": http.StatusBadRequest, "message": "Scan Error! Get Restaurant Tables"}
 			}
 			tables = append(tables, table)
 		}
 
-		return tables
+		return tables, gin.H{"status": http.StatusOK, "message": "success", "data": tables}
 	}
 	results, err := db.Query("SELECT * FROM tables WHERE rest_id = ?", resID)
 	defer db.Close()
 
 	if err != nil {
-		fmt.Println("Err", err.Error())
-		return nil
+		return nil, gin.H{"status": http.StatusBadRequest, "message": "Query Error! Get Restaurant Tables", "error": err.Error()}
 	}
 	tables := []models.Table{}
 	for results.Next() {
 		var table models.Table
-		err = results.Scan(&table.TableNo, &table.RestID, &table.QR)
+		err = results.Scan(&table.RestID, &table.TableNo, &table.WaiterID, &table.QR)
 		if err != nil {
-			panic(err.Error())
+			return nil, gin.H{"status": http.StatusBadRequest, "message": "Scan Error! Get Restaurant Tables"}
 		}
 		tables = append(tables, table)
 	}
 
-	return tables
+	return tables, gin.H{"status": http.StatusOK, "message": "success", "data": tables}
 }
 
 func GetTable(tableId int64) (models.Table, gin.H) {
@@ -134,15 +131,15 @@ func AddTable(c *gin.Context) (bool, gin.H) {
 		return false, header
 	}
 
-	_, err = db.Exec("INSERT INTO tables (table_no, rest_id, qr) VALUES (?)", table.TableNo, table.RestID, table.QR)
+	_, err = db.Exec("INSERT INTO tables (table_no, rest_id, qr) VALUES (?, ?, ?)", table.TableNo, table.RestID, table.QR)
 	defer db.Close()
 
 	if err != nil {
 		fmt.Println("Err", err.Error())
-		return false, gin.H{"status": http.StatusBadRequest, "message": "DB Query Error! Add Table"}
+		return false, gin.H{"status": http.StatusBadRequest, "message": "DB Query Error! Add Table", "error": err.Error()}
 	}
 
-	return true, gin.H{"status": http.StatusOK, "message": "success"}
+	return true, gin.H{"status": http.StatusOK, "message": "success", "qr": table.QR}
 }
 
 func CreateQRCode(tid int64, rid int64) ([]byte, gin.H) {

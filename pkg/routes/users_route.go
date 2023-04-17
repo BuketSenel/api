@@ -60,4 +60,20 @@ func userRoute(rg *gin.RouterGroup) {
 			)
 		}
 	})
+
+	userGroup.GET("/waiters/all", func(c *gin.Context) {
+		users, header := controllers.GetUsers()
+		if users == nil {
+			c.Header("Content-Type", "application/json")
+			c.JSON(http.StatusTeapot, header)
+			c.Abort()
+		} else {
+			c.JSON(http.StatusOK, gin.H{
+				"size":   len(users),
+				"offset": "0",
+				"limit":  "25",
+				"items":  users,
+			})
+		}
+	})
 }
