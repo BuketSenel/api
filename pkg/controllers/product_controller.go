@@ -86,3 +86,45 @@ func CreateProduct(c *gin.Context) (bool, gin.H) {
 	}
 	return true, gin.H{"status": http.StatusOK, "message": "Product created!", "data": results}
 }
+
+func EditProduct(c *gin.Context) (bool, gin.H) {
+	product := models.Product{}
+	err := c.BindJSON(&product)
+	if err != nil {
+		return false, gin.H{"status": http.StatusBadRequest, "message": "Bind Error! Edit Product"}
+	}
+
+	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
+
+	if err != nil {
+		return false, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Edit Product"}
+	}
+
+	results, err := db.Query("UPDATE products SET prod_name = ?, prod_desc = ?, price = ?, currency = ?, prep_dur_minute = ? WHERE prod_id = ?", product.Name, product.Description, product.Price, product.Currency, product.PrepDurationMin, product.ID)
+	defer db.Close()
+	if err != nil {
+		return false, gin.H{"status": http.StatusBadRequest, "message": "Update Error! Edit Product"}
+	}
+	return true, gin.H{"status": http.StatusOK, "message": "Product updated!", "data": results}
+}
+
+func DeleteProduct(c *gin.Context) (bool, gin.H) {
+	product := models.Product{}
+	err := c.BindJSON(&product)
+	if err != nil {
+		return false, gin.H{"status": http.StatusBadRequest, "message": "Bind Error! Delete Product"}
+	}
+
+	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
+
+	if err != nil {
+		return false, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Delete Product"}
+	}
+
+	results, err := db.Query("DELETE FROM products WHERE prod_id = ?", product.ID)
+	defer db.Close()
+	if err != nil {
+		return false, gin.H{"status": http.StatusBadRequest, "message": "Delete Error! Delete Product"}
+	}
+	return true, gin.H{"status": http.StatusOK, "message": "Product deleted!", "data": results}
+}
