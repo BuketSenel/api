@@ -61,8 +61,10 @@ func userRoute(rg *gin.RouterGroup) {
 		}
 	})
 
-	userGroup.GET("/waiters/all", func(c *gin.Context) {
-		users, header := controllers.GetUsers()
+	userGroup.GET("/:userId", func(c *gin.Context) {
+		uid := c.Param("userId")
+		userId, _ := strconv.ParseInt(uid, 10, 64)
+		users, header := controllers.GetUser(userId)
 		if users == nil {
 			c.Header("Content-Type", "application/json")
 			c.JSON(http.StatusTeapot, header)
@@ -74,6 +76,24 @@ func userRoute(rg *gin.RouterGroup) {
 				"limit":  "25",
 				"items":  users,
 			})
+		}
+	})
+
+	userGroup.POST("/edit", func(c *gin.Context) {
+		user, header := controllers.EditUser(c)
+		if !user {
+			c.Header("Content-Type", "application/json")
+			c.JSON(http.StatusNotFound, header)
+			c.Abort()
+		} else {
+			c.JSON(http.StatusOK, gin.H{
+				"status":  "200",
+				"message": "OK",
+				"items":   user,
+				"offset":  "0",
+				"limit":   "25",
+			},
+			)
 		}
 	})
 }
