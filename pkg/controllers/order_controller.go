@@ -19,7 +19,7 @@ func GetRestaurantOrders(rid int64) (*[]models.CustomQuery, gin.H) {
 		return nil, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error!"}
 	}
 
-	results, err := db.Query("SELECT order_item_id, prod_name, prod_desc, table_id, quantity, order_status FROM products JOIN orders ON `orders`.`prod_id` = products.prod_id WHERE `orders`.`rest_id` = (?) AND `orders`.`order_status` != 'Deny'", rid)
+	results, err := db.Query("SELECT order_item_id, prod_name, prod_desc, table_id, quantity, order_status FROM products JOIN orders ON `orders`.`prod_id` = products.prod_id WHERE `orders`.`rest_id` = (?) AND (`orders`.`order_status` = 'To do' OR  `orders`.`order_status` = 'In progress' OR `orders`.`order_status` = 'Completed')", rid)
 	if err != nil {
 		return nil, gin.H{"status": http.StatusBadRequest, "message": "Selection Error!"}
 	}
