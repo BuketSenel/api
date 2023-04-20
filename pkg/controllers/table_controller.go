@@ -19,7 +19,7 @@ func GetRestaurantTables(resID int64, tableId int64) ([]models.Table, gin.H) {
 	}
 
 	if tableId != 0 {
-		results, err := db.Query("SELECT * FROM tables WHERE rest_id = ? AND table_no = ?", resID, tableId)
+		results, err := db.Query("SELECT rest_id, table_no, waiter_no, qr FROM tables WHERE rest_id = ? AND table_no = ?", resID, tableId)
 		defer db.Close()
 
 		if err != nil {
@@ -150,4 +150,30 @@ func CreateQRCode(tid int64, rid int64) ([]byte, gin.H) {
 		return nil, gin.H{"status": http.StatusBadRequest, "message": "QR Code Error! Create QR Code"}
 	}
 	return table.QR, gin.H{"status": http.StatusOK, "message": "success"}
+}
+
+func EditTable(c *gin.Context) (bool, gin.H) {
+	table := models.Table{}
+	err := c.BindJSON(&table)
+
+	if err != nil {
+		return false, gin.H{"status": http.StatusBadRequest, "message": "Bind Error! Edit Table"}
+	}
+
+	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
+
+	if err != nil {
+		fmt.Println("Err", err.Error())
+		return false, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Edit Table"}
+	}
+
+	_, err = db.Exec("UPDATE tables SET table_no = ? WHERE table_no = ? and rest_id = ?", table.NewTableNo, table.TableNo, table.RestID)
+	defer db.Close()
+
+	if err != nil {
+		fmt.Println("Err", err.Error())
+		return false, gin.H{"status": http.StatusBadRequest, "message": "DB Query Error! Edit Table", "error": err.Error()}
+	}
+
+	return true, gin.H{"status": http.StatusOK, "message": "success"}
 }
