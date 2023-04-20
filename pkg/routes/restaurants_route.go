@@ -201,7 +201,7 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		}
 	})
 
-	restGroup.POST("/alterOrder", func(c *gin.Context) {
+	restGroup.POST("/orders/alter", func(c *gin.Context) {
 		orderChanged, header := controllers.ChangeOrderStatus(c)
 		if !orderChanged {
 			c.Header("Content-Type", "application/json")
@@ -220,7 +220,7 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		}
 	})
 
-	restGroup.POST("/addStaff", func(c *gin.Context) {
+	restGroup.POST("/staff/add", func(c *gin.Context) {
 		staffCreated, header := controllers.AddStaff(c)
 		if !staffCreated {
 			c.Header("Content-Type", "application/json")
@@ -239,8 +239,8 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		}
 	})
 
-	restGroup.DELETE("/deleteStaff", func(c *gin.Context) {
-		staffDeleted, header := controllers.DeleteStaff(c)
+	restGroup.POST("/staff/delete", func(c *gin.Context) {
+		staffDeleted, header := controllers.DeleteUser(c)
 		if !staffDeleted {
 			c.Header("Content-Type", "application/json")
 			c.JSON(http.StatusNotFound, header)
@@ -258,9 +258,76 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		}
 	})
 
+	restGroup.POST("/waiter/tip", func(c *gin.Context) {
+		tipAdded, header := controllers.TippingWaiter(c)
+		if !tipAdded {
+			c.Header("Content-Type", "application/json")
+			c.JSON(http.StatusNotFound, header)
+			c.Abort()
+		} else {
+			c.JSON(http.StatusOK,
+				gin.H{
+					"status":  "200",
+					"message": "OK",
+					"items":   tipAdded,
+					"offset":  "0",
+					"limit":   "25",
+				},
+			)
+		}
+	})
+
+	restGroup.GET("/:resId/waiter/:waiterId", func(c *gin.Context) {
+		waiterID := c.Param("waiterId")
+		resID := c.Param("resId")
+		wid, _ := strconv.ParseInt(waiterID, 10, 64)
+		rid, _ := strconv.ParseInt(resID, 10, 64)
+		tip, header := controllers.GetTips(wid, rid)
+		if tip == nil {
+			c.Header("Content-Type", "application/json")
+			c.JSON(http.StatusNotFound, header)
+			c.Abort()
+		} else {
+			c.JSON(http.StatusOK,
+				gin.H{
+					"status":  http.StatusOK,
+					"message": "OK",
+					"size":    len(tip),
+					"items":   tip,
+					"offset":  "0",
+					"limit":   "25",
+				},
+			)
+		}
+	})
+
+	restGroup.GET("/:resId/tables/:tableId", func(c *gin.Context) {
+		tableID := c.Param("tableId")
+		resID := c.Param("resId")
+		tid, _ := strconv.ParseInt(tableID, 10, 64)
+		rid, _ := strconv.ParseInt(resID, 10, 64)
+		table, header := controllers.GetWaitersByTable(tid, rid)
+		if table == nil {
+			c.Header("Content-Type", "application/json")
+			c.JSON(http.StatusNotFound, header)
+			c.Abort()
+		} else {
+			c.JSON(http.StatusOK,
+				gin.H{
+					"status":  http.StatusOK,
+					"message": "OK",
+					"size":    len(table),
+					"items":   table,
+					"offset":  "0",
+					"limit":   "25",
+				},
+			)
+		}
+	})
+
 	restGroup.GET("/:resId/staff", func(c *gin.Context) {
 		resID := c.Param("resId")
-		rid, _ := strconv.ParseInt(resID, 16, 64)
+		rid, _ := strconv.ParseInt(resID, 10, 64)
 		staff, header := controllers.GetRestaurantStaff(rid)
 		if staff == nil {
 			c.Header("Content-Type", "application/json")
@@ -302,13 +369,24 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		}
 	})
 
-	restGroup.GET("/:resId/tables/:tableID", func(c *gin.Context) {
+	restGroup.GET("/:resId/:tableID/tables", func(c *gin.Context) {
 		resID := c.Param("resID")
 		tableID := c.Param("tableID")
 		rid, _ := strconv.ParseInt(resID, 10, 64)
 		tid, _ := strconv.ParseInt(tableID, 10, 64)
 		tables, header := controllers.GetRestaurantTables(rid, tid)
 		if len(tables) == 0 {
+			c.Header("Content-Type", "application/json")
+			c.JSON(http.StatusTeapot, header)
+			c.Abort()
+		} else {
+			c.JSON(http.StatusOK, header)
+		}
+	})
+
+	restGroup.POST("/products", func(c *gin.Context) {
+		product, header := controllers.CreateProduct(c)
+		if !product {
 			c.Header("Content-Type", "application/json")
 			c.JSON(http.StatusNotFound, header)
 			c.Abort()
@@ -317,8 +395,7 @@ func restaurantRoute(rg *gin.RouterGroup) {
 				gin.H{
 					"status":  "200",
 					"message": "OK",
-					"size":    len(tables),
-					"items":   tables,
+					"items":   product,
 					"offset":  "0",
 					"limit":   "25",
 				},
@@ -326,8 +403,27 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		}
 	})
 
-	restGroup.POST("/products", func(c *gin.Context) {
-		product, header := controllers.CreateProduct(c)
+	restGroup.POST("/products/edit", func(c *gin.Context) {
+		product, header := controllers.EditProduct(c)
+		if !product {
+			c.Header("Content-Type", "application/json")
+			c.JSON(http.StatusNotFound, header)
+			c.Abort()
+		} else {
+			c.JSON(http.StatusOK,
+				gin.H{
+					"status":  "200",
+					"message": "OK",
+					"items":   product,
+					"offset":  "0",
+					"limit":   "25",
+				},
+			)
+		}
+	})
+
+	restGroup.POST("/products/delete", func(c *gin.Context) {
+		product, header := controllers.DeleteProduct(c)
 		if !product {
 			c.Header("Content-Type", "application/json")
 			c.JSON(http.StatusNotFound, header)
@@ -449,6 +545,18 @@ func restaurantRoute(rg *gin.RouterGroup) {
 
 	restGroup.POST("/tables/assign", func(c *gin.Context) {
 		tables, header := controllers.AssignWaiter(c)
+		if !tables {
+			c.Header("Content-Type", "application/json")
+			c.JSON(http.StatusNotFound, header)
+			c.Abort()
+		} else {
+			c.JSON(http.StatusOK, header)
+		}
+
+	})
+
+	restGroup.POST("/tables/edit", func(c *gin.Context) {
+		tables, header := controllers.EditTable(c)
 		if !tables {
 			c.Header("Content-Type", "application/json")
 			c.JSON(http.StatusNotFound, header)
