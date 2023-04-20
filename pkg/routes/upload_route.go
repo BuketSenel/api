@@ -9,21 +9,20 @@ import (
 )
 
 func uploadRoute(rg *gin.RouterGroup) {
-	uploadGroup := rg.Group("/")
+	uploadGroup := rg.Group("")
 	uploadGroup.Use(middleware.CORSMiddleware())
-
 	uploadGroup.POST("", func(c *gin.Context) {
-		file, header := controllers.UploadFile(c)
-		if !file {
+		filePath, header := controllers.UploadFile(c)
+		if filePath == "" {
 			c.Header("Content-Type", "application/json")
-			c.JSON(http.StatusNotFound, header)
+			c.JSON(http.StatusBadRequest, header)
 			c.Abort()
 		} else {
 			c.JSON(http.StatusOK,
 				gin.H{
 					"status":  http.StatusOK,
 					"message": "OK",
-					"items":   file,
+					"items":   filePath,
 					"offset":  "0",
 					"limit":   "25",
 				},

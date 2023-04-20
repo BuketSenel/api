@@ -17,17 +17,18 @@ func StartRouting() {
 }
 
 func getRoutes() {
+	route.MaxMultipartMemory = 15 << 20 // 15 MiB
 	restaurant := route.Group("/restaurants")
 	user := route.Group("/users")
 	category := route.Group("/categories")
 	login := route.Group("/login")
 	order := route.Group("/orders")
-	//upload := route.Group("/upload")
+	upload := route.Group("/upload")
 
 	restaurantRoute(restaurant)
 	userRoute(user)
 	categoryRoute(category)
 	loginRoute(login)
 	orderRoute(order)
-	//uploadRoute(upload)
+	uploadRoute(upload)
 }
