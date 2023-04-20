@@ -78,7 +78,7 @@ func AssignWaiter(c *gin.Context) (bool, gin.H) {
 	return true, gin.H{"status": http.StatusOK, "message": "success", "data": table, "result": result}
 }
 
-func GetUsers() ([]models.User, gin.H) {
+func GetUser(uid int64) ([]models.User, gin.H) {
 	var users = []models.User{}
 	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
 
@@ -86,7 +86,7 @@ func GetUsers() ([]models.User, gin.H) {
 		return nil, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Get Users"}
 	}
 
-	results, err := db.Query("SELECT user_name, user_id FROM users WHERE type = 'waiter'")
+	results, err := db.Query("SELECT user_name, user_phone, email, rest_id, type FROM users WHERE user_id = ?", uid)
 	defer db.Close()
 
 	if err != nil {
@@ -95,7 +95,7 @@ func GetUsers() ([]models.User, gin.H) {
 
 	for results.Next() {
 		var user models.User
-		err = results.Scan(&user.Name, &user.ID)
+		err = results.Scan(&user.Name, &user.Phone, &user.Email, &user.ResID, &user.Type)
 		if err != nil {
 			return nil, gin.H{"status": http.StatusBadRequest, "message": "DB Scan Error! Get Users"}
 		}
@@ -103,4 +103,26 @@ func GetUsers() ([]models.User, gin.H) {
 	}
 
 	return users, gin.H{"status": http.StatusOK, "message": "success", "data": results}
+}
+
+func EditUser(c *gin.Context) (bool, gin.H) {
+	var user models.User
+	err := c.BindJSON(&user)
+	if err != nil {
+		return false, gin.H{"status": http.StatusBadRequest, "message": "Invalid JSON"}
+	}
+
+	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
+
+	if err != nil {
+		return false, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Edit User"}
+	}
+	result, err := db.Exec("UPDATE users SET user_name = ?, user_phone = ?, email = ?, type = ? WHERE user_id = ?", user.Name, user.Phone, user.Email, user.Type, user.ID)
+	defer db.Close()
+
+	if err != nil {
+		return false, gin.H{"status": http.StatusBadRequest, "message": "DB Query Error! Edit User"}
+	}
+
+	return true, gin.H{"status": http.StatusOK, "message": "success", "data": user, "result": result}
 }
