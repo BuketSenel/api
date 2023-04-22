@@ -24,25 +24,35 @@ func RestaurantRegister(c *gin.Context) (bool, gin.H) {
 
 	result, err := SaveRestaurant(custQuery, c)
 	if !result {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return false, gin.H{"status": http.StatusBadRequest, "message": "Registration Error!"}
+		return false, gin.H{"status": http.StatusBadRequest, "message": "Registration Error!", "error": err, "data": result}
 	}
 
 	return true, gin.H{"status": http.StatusOK, "message": "Registration Error!"}
 }
 
-func SaveRestaurant(cq models.CustomQuery, c *gin.Context) (bool, error) {
+func SaveRestaurant(cq models.CustomQuery, c *gin.Context) (bool, gin.H) {
 	credential := models.Credential{}
 	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
 	if err != nil {
-		return false, err
+		return false, gin.H{"status": http.StatusBadGateway, "message": "Database connection! Save Restaurant", "error": err.Error()}
 	}
+
+	rows, err := db.Query("SELECT * FROM users WHERE email = ?", cq.Email)
+
+	if err != nil {
+		return false, gin.H{"status": http.StatusBadRequest, "message": "Database error! Save User", "error": err.Error()}
+	}
+
+	if rows.Next() {
+		return false, gin.H{"message": "Email address is already registered!", "status": http.StatusBadRequest, "error": err, "data": rows.Next()}
+	}
+
 	hashedPass := PasswordHash(fmt.Sprint(cq.Password))
 
 	query_restaurant := "INSERT INTO restaurants (rest_name, address, district, city, country, rest_phone) values (?,?,?,?,?,?)"
 	results, err := db.ExecContext(c, query_restaurant, string(cq.RestName), string(cq.Address), string(cq.District), string(cq.City), string(cq.Country), string(cq.RestPhone))
 	if results == nil || err != nil {
-		return false, err
+		return false, gin.H{"status": http.StatusBadRequest, "message": "Insertion error! Save Restaurant", "error": err.Error()}
 	}
 
 	resID, err := db.Query("SELECT rest_id FROM restaurants WHERE rest_name = ?", string(cq.RestName))
@@ -51,12 +61,12 @@ func SaveRestaurant(cq models.CustomQuery, c *gin.Context) (bool, error) {
 		err = resID.Scan(&restID)
 	}
 	if err != nil {
-		return false, err
+		return false, gin.H{"status": http.StatusBadRequest, "message": "Selection error! Save Restaurant", "error": err.Error()}
 	}
 	query_user := "INSERT INTO users (user_name, password, user_phone, email, rest_id, type) values (?,?,?,?,?,?)"
 	result_user, err := db.ExecContext(c, query_user, string(cq.UserName), hashedPass, string(cq.UserPhone), string(cq.Email), restID, "Manager")
 	if result_user == nil || err != nil {
-		return false, err
+		return false, gin.H{"status": http.StatusBadRequest, "message": "Insertion error! Save Restaurant", "error": err.Error()}
 	}
 
 	credential.Email = string(cq.Email)
@@ -65,11 +75,11 @@ func SaveRestaurant(cq models.CustomQuery, c *gin.Context) (bool, error) {
 	results, err = db.ExecContext(c, query, string(cq.Email), hashedPass)
 
 	if results == nil || err != nil {
-		return false, err
+		return false, gin.H{"status": http.StatusBadRequest, "message": "Insertion error! Save Restaurant", "error": err.Error()}
 	}
 
 	defer db.Close()
-	return true, nil
+	return true, gin.H{"status": http.StatusOK, "message": "Registration Successful!"}
 }
 
 func PasswordHash(password string) string {
