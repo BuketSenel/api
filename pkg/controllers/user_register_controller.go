@@ -20,6 +20,7 @@ func UserRegister(c *gin.Context) (bool, gin.H) {
 	}
 
 	result, err := SaveUser(user, c)
+	return false, gin.H{"message": "Error", "status": http.StatusBadRequest, "error": err, "data": result}
 
 	if !result || err != nil {
 		return result, err
@@ -35,6 +36,16 @@ func SaveUser(user models.User, c *gin.Context) (bool, gin.H) {
 		message := gin.H{"status": http.StatusBadGateway, "message": err.Error()}
 		return false, message
 	}
+
+	rows, err := db.Query("SELECT * FROM users WHERE email = ? ", user.Email)
+	if err != nil {
+		return false, gin.H{"status": http.StatusBadRequest, "message": "Database error! Save User", "error": err.Error()}
+	}
+
+	if rows.Next() {
+		return false, gin.H{"status": http.StatusBadRequest, "message": "Email address is already registered!", "error": err.Error()}
+	}
+
 	hashedPass := PasswordHash(user.Password)
 
 	query := "INSERT INTO users (user_name, password, user_phone, email, rest_id, type) values (?,?,?,?,?,?)"

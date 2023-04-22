@@ -27,14 +27,7 @@ func userRoute(rg *gin.RouterGroup) {
 		} else {
 			c.Header("Content-Type", "application/json")
 			c.Header("Authorization", "JWT")
-			c.JSON(http.StatusOK, gin.H{
-				"status":  "200",
-				"message": "OK",
-				"items":   register,
-				"offset":  "0",
-				"limit":   "25",
-			},
-			)
+			c.JSON(http.StatusOK, header)
 		}
 	})
 
