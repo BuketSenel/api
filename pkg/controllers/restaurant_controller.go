@@ -193,7 +193,7 @@ func GetWaiterOrdersByTable(rid int64, tableID int64) ([]models.CustomQuery, gin
 	return customQuery, gin.H{"status": http.StatusOK, "orders": customQuery}
 }
 
-func TippingWaiter(c *gin.Context) (bool, gin.H) {
+func TipWaiter(c *gin.Context) (bool, gin.H) {
 	tip := models.Tip{}
 	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice?parseTime=true")
 
