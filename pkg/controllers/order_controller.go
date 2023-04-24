@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/SelfServiceCo/api/pkg/models"
 	"github.com/gin-gonic/gin"
@@ -47,7 +48,7 @@ func GetOrdersByUser(uid int64, status string) ([]models.Order, gin.H) {
 	}
 	var results *sql.Rows
 	if status == "" {
-		results, err = db.Query("SELECT user_id, order_id, order_item_id, prod_name, table_id, quantity, order_status, orders.rest_id, products.price FROM products JOIN orders ON `orders`.`prod_id` = products.prod_id WHERE `orders`.`user_id` = (?);", uid)
+		results, err = db.Query("SELECT user_id, order_id, order_item_id, prod_name, table_id, quantity, order_status, orders.rest_id, products.price FROM products JOIN orders ON `orders`.`prod_id` = products.prod_id WHERE `orders`.`user_id` = (?) AND (`orders`.`order_status` = 'To do' OR  `orders`.`order_status` = 'In progress' OR `orders`.`order_status` = 'Completed')", uid)
 	} else {
 		results, err = db.Query("SELECT user_id, order_id, order_item_id, prod_name, table_id, quantity, order_status, orders.rest_id, products.price FROM products JOIN orders ON `orders`.`prod_id` = products.prod_id WHERE `orders`.`user_id` = (?) and `orders`.`order_status` = (?);", uid, status)
 	}
@@ -56,6 +57,8 @@ func GetOrdersByUser(uid int64, status string) ([]models.Order, gin.H) {
 		return orders, gin.H{"status": http.StatusBadRequest, "message": "Selection Error!"}
 	}
 
+	var count int64
+	count = 0
 	for results.Next() {
 		order := models.Order{}
 		err = results.Scan(&order.UserID, &order.ID, &order.OrderItemID, &order.ProductName, &order.TableID, &order.Quantity, &order.Status, &order.ResID, &order.Price)
@@ -63,9 +66,14 @@ func GetOrdersByUser(uid int64, status string) ([]models.Order, gin.H) {
 			return orders, gin.H{"status": http.StatusBadRequest, "message": "Scan Error!", "data": results, "Error": err.Error()}
 		}
 		orders = append(orders, order)
+		quantity, _ := strconv.ParseInt(order.Quantity, 10, 64)
+		if quantity > 1 {
+			count = count + (quantity - 1)
+		}
+		count++
 	}
 
-	return orders, gin.H{"status": "success", "data": orders}
+	return orders, gin.H{"status": "success", "data": orders, "results": results, "count": count}
 }
 
 func ChangeOrderStatus(c *gin.Context) (bool, gin.H) {
