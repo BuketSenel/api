@@ -18,13 +18,18 @@ func UploadFile(c *gin.Context) (string, gin.H) {
 	}
 	rest_id := c.PostForm("rest_id")
 
-	filePath := "/www/uploads/" + rest_id + "/" + file.Filename
+	filePath := "/www/menu-icons/" + rest_id + "/" + file.Filename
 	err = c.SaveUploadedFile(file, filePath)
 
 	if err != nil {
 		return "", gin.H{"status": http.StatusBadRequest, "message": err.Error()}
 	}
 
+	domain, header := UploadToS3(filePath)
+	return domain, header
+}
+
+func UploadToS3(filePath string) (string, gin.H) {
 	f, err := os.Open(filePath)
 	if err != nil {
 		return "", gin.H{"status": http.StatusBadRequest, "message": err.Error()}
@@ -36,13 +41,13 @@ func UploadFile(c *gin.Context) (string, gin.H) {
 
 	_, err = s3.New(session).PutObject(&s3.PutObjectInput{
 		Bucket: aws.String(conf.BUCKET_NAME),
-		Key:    aws.String(rest_id + "/" + file.Filename),
+		Key:    aws.String(f.Name()),
 		ACL:    aws.String("private"),
 		Body:   f,
 	})
 	if err != nil {
 		return "", gin.H{"status": http.StatusBadRequest, "message": err.Error()}
 	}
-	domain := "https://s3." + conf.BUCKET_REGION + ".amazonaws.com/" + conf.BUCKET_NAME + "/" + rest_id + "/" + file.Filename
+	domain := "https://s3." + conf.BUCKET_REGION + ".amazonaws.com/" + conf.BUCKET_NAME + f.Name()
 	return domain, gin.H{"status": http.StatusOK, "message": "OK"}
 }

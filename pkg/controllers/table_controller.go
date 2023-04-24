@@ -129,12 +129,12 @@ func AddTable(c *gin.Context) (bool, gin.H) {
 	}
 
 	var header = gin.H{}
-	qr_png, header := CreateQRCode(table.TableNo, table.RestID)
+	domain, header := CreateQRCode(table.TableNo, table.RestID)
 	if header["status"] != http.StatusOK {
-		return false, gin.H{"status": http.StatusBadRequest, "message": "QR Code Error! Add Table", "error": header, "data": qr_png}
+		return false, gin.H{"status": http.StatusBadRequest, "message": "QR Code Error! Add Table", "error": header, "data": domain}
 	}
 
-	_, err = db.Exec("INSERT INTO tables (table_no, rest_id) VALUES (?, ?)", table.TableNo, table.RestID)
+	_, err = db.Exec("INSERT INTO tables (table_no, rest_id, qr) VALUES (?, ?, ?)", table.TableNo, table.RestID, domain)
 	defer db.Close()
 
 	if err != nil {
@@ -142,12 +142,14 @@ func AddTable(c *gin.Context) (bool, gin.H) {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "DB Query Error! Add Table", "error": err.Error()}
 	}
 
-	return true, gin.H{"status": http.StatusOK, "message": "success", "qr": qr_png}
+	return true, gin.H{"status": http.StatusOK, "message": "success", "qr": domain}
 }
 
 func CreateQRCode(tid int64, rid int64) (string, gin.H) {
 	var table = models.Table{}
 	var err error
+	rest_id := strconv.FormatInt(rid, 10)
+	table_no := strconv.FormatInt(tid, 10)
 	qr_string := map[string]int64{"table_no": tid, "rest_id": rid}
 	qr_json, _ := json.Marshal(qr_string)
 	table.QR, err = qrcode.New(string(qr_json), qrcode.Medium)
@@ -157,9 +159,9 @@ func CreateQRCode(tid int64, rid int64) (string, gin.H) {
 	if err != nil {
 		return "", gin.H{"status": http.StatusBadRequest, "message": "Could not retrive the file from the request!"}
 	}
-	filePath := "/www/qr-codes/" + strconv.FormatInt(rid, 10) + "/" + strconv.FormatInt(tid, 10) + ".png"
-	if _, err := os.Stat("/www/qr-codes/" + strconv.FormatInt(rid, 10)); os.IsNotExist(err) {
-		os.Mkdir("/www/qr-codes/"+strconv.FormatInt(rid, 10), 0777)
+	filePath := "/www/qr-codes/" + rest_id + "/" + table_no + ".png"
+	if _, err := os.Stat("/www/qr-codes/" + rest_id); os.IsNotExist(err) {
+		os.Mkdir("/www/qr-codes/"+rest_id, 0777)
 	}
 	osFile, err := os.Create(filePath)
 	if err != nil {
@@ -169,7 +171,32 @@ func CreateQRCode(tid int64, rid int64) (string, gin.H) {
 	if err != nil {
 		return "", gin.H{"status": http.StatusBadRequest, "message": "QR Code Write File Error! Create QR Code", "error": err.Error()}
 	}
-	return filePath, gin.H{"status": http.StatusOK, "message": "success"}
+	domain, header := UploadToS3(filePath)
+	if header["status"] != http.StatusOK {
+		return "", gin.H{"status": http.StatusBadRequest, "message": "QR Code Upload To S3 Error! Create QR Code", "error": header}
+	}
+	return domain, gin.H{"status": http.StatusOK, "message": "success"}
+}
+
+func GetQRCode(rid int64, tid int64) (string, gin.H) {
+	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
+
+	if err != nil {
+		return "", gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Get QR Code"}
+	}
+	results, err := db.Query("SELECT qr FROM tables WHERE table_no = (?) AND rest_id = (?)", tid, rid)
+	if err != nil {
+		return "", gin.H{"status": http.StatusBadRequest, "message": "DB Query Error! Get QR Code"}
+	}
+	defer db.Close()
+	table := models.Table{}
+	for results.Next() {
+		err = results.Scan(&table.QRString)
+		if err != nil {
+			return "", gin.H{"status": http.StatusBadRequest, "message": "DB Scan Error! Get Users"}
+		}
+	}
+	return table.QRString, gin.H{"status": http.StatusOK, "message": "success", "table": table}
 }
 
 func EditTable(c *gin.Context) (bool, gin.H) {
