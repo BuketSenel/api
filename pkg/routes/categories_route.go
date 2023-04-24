@@ -29,8 +29,27 @@ func categoryRoute(rg *gin.RouterGroup) {
 		}
 	})
 
-	catGroup.GET("/dropdown/:resId", func(c *gin.Context) {
-		resID := c.Param("resId")
+	catGroup.POST("", func(c *gin.Context) {
+		category, header := controllers.CreateCategory(c)
+		if category == 0 {
+			c.Header("Content-Type", "application/json")
+			c.JSON(http.StatusNotFound, header)
+			c.Abort()
+		} else {
+			c.JSON(http.StatusOK,
+				gin.H{
+					"status":  "200",
+					"message": "OK",
+					"items":   category,
+					"offset":  "0",
+					"limit":   "25",
+				},
+			)
+		}
+	})
+
+	catGroup.GET("/dropdown", func(c *gin.Context) {
+		resID := c.Query("resId")
 		id, _ := strconv.ParseInt(resID, 16, 64)
 		categories := controllers.CategoriesForDropdown(id)
 		if len(categories) == 0 {

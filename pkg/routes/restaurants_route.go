@@ -12,8 +12,8 @@ import (
 func restaurantRoute(rg *gin.RouterGroup) {
 	restGroup := rg.Group("/")
 	restGroup.Use(middleware.CORSMiddleware())
-	restGroup.GET("/:resId", func(c *gin.Context) {
-		resID := c.Param("resId")
+	restGroup.GET("", func(c *gin.Context) {
+		resID := c.Query("resId")
 		id, _ := strconv.ParseInt(resID, 16, 64)
 		restaurant, header := controllers.GetRestaurant(id)
 		if len(restaurant) == 0 {
@@ -34,8 +34,8 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		}
 	})
 
-	restGroup.GET("/:resId/categories", func(c *gin.Context) {
-		resID := c.Param("resId")
+	restGroup.GET("/categories", func(c *gin.Context) {
+		resID := c.Query("resId")
 		id, _ := strconv.ParseInt(resID, 16, 64)
 		categories, header := controllers.CategoriesByRestaurant(id)
 		if len(categories) == 0 {
@@ -56,9 +56,9 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		}
 	})
 
-	restGroup.GET("/:resId/categories/:catID/products", func(c *gin.Context) {
-		resID := c.Param("resId")
-		catID := c.Param("catID")
+	restGroup.GET("/categories/products", func(c *gin.Context) {
+		resID := c.Query("resId")
+		catID := c.Query("catId")
 		rid, _ := strconv.ParseInt(resID, 16, 64)
 		cid, _ := strconv.ParseInt(catID, 16, 64)
 		products := controllers.ProductsByCategories(cid, rid)
@@ -85,8 +85,8 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		}
 	})
 
-	restGroup.GET("/:resId/products", func(c *gin.Context) {
-		resID := c.Param("resId")
+	restGroup.GET("/products", func(c *gin.Context) {
+		resID := c.Query("resId")
 		rid, _ := strconv.ParseInt(resID, 16, 64)
 		products := controllers.ProductsByRestaurants(rid)
 		if len(products) == 0 {
@@ -131,7 +131,7 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		}
 	})
 
-	restGroup.GET("", func(c *gin.Context) {
+	restGroup.GET("/top", func(c *gin.Context) {
 		restaurant, header := controllers.GetTopRestaurants()
 		if restaurant == nil {
 			c.Header("Content-Type", "application/json")
@@ -151,8 +151,8 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		}
 	})
 
-	restGroup.GET("/:resId/orders", func(c *gin.Context) {
-		resID := c.Param("resId")
+	restGroup.GET("/orders", func(c *gin.Context) {
+		resID := c.Query("resId")
 		id, _ := strconv.ParseInt(resID, 16, 64)
 		orders, header := controllers.GetRestaurantOrders(id)
 		if *orders == nil {
@@ -173,9 +173,9 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		}
 	})
 
-	restGroup.GET("/:resId/orders/:orderId", func(c *gin.Context) {
-		orderID := c.Param("orderId")
-		resID := c.Param("resId")
+	restGroup.GET("/order", func(c *gin.Context) {
+		orderID := c.Query("orderId")
+		resID := c.Query("resId")
 		oid, _ := strconv.ParseInt(orderID, 16, 64)
 		rid, _ := strconv.ParseInt(resID, 16, 64)
 		order, _ := controllers.GetOrder(oid, rid)
@@ -258,8 +258,8 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		}
 	})
 
-	restGroup.POST("/waiter/tip", func(c *gin.Context) {
-		tipAdded, header := controllers.TippingWaiter(c)
+	restGroup.POST("/waiters/tips", func(c *gin.Context) {
+		tipAdded, header := controllers.TipWaiter(c)
 		if !tipAdded {
 			c.Header("Content-Type", "application/json")
 			c.JSON(http.StatusNotFound, header)
@@ -277,9 +277,9 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		}
 	})
 
-	restGroup.GET("/:resId/waiter/:waiterId", func(c *gin.Context) {
-		waiterID := c.Param("waiterId")
-		resID := c.Param("resId")
+	restGroup.GET("/waiters/tips", func(c *gin.Context) {
+		waiterID := c.Query("waiterId")
+		resID := c.Query("resId")
 		wid, _ := strconv.ParseInt(waiterID, 10, 64)
 		rid, _ := strconv.ParseInt(resID, 10, 64)
 		tip, header := controllers.GetTips(wid, rid)
@@ -301,9 +301,9 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		}
 	})
 
-	restGroup.GET("/:resId/tables/:tableId", func(c *gin.Context) {
-		tableID := c.Param("tableId")
-		resID := c.Param("resId")
+	restGroup.GET("/tables/waiters", func(c *gin.Context) {
+		tableID := c.Query("tableId")
+		resID := c.Query("resId")
 		tid, _ := strconv.ParseInt(tableID, 10, 64)
 		rid, _ := strconv.ParseInt(resID, 10, 64)
 		table, header := controllers.GetWaitersByTable(tid, rid)
@@ -325,8 +325,32 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		}
 	})
 
-	restGroup.GET("/:resId/staff", func(c *gin.Context) {
-		resID := c.Param("resId")
+	restGroup.GET("/tables/qr", func(c *gin.Context) {
+		tableID := c.Query("tableId")
+		resID := c.Query("resId")
+		tid, _ := strconv.ParseInt(tableID, 10, 64)
+		rid, _ := strconv.ParseInt(resID, 10, 64)
+		qr, header := controllers.GetQRCode(rid, tid)
+		if qr == "" {
+			c.Header("Content-Type", "application/json")
+			c.JSON(http.StatusNotFound, header)
+			c.Abort()
+		} else {
+			c.JSON(http.StatusOK,
+				gin.H{
+					"status":  http.StatusOK,
+					"message": "OK",
+					"size":    len(qr),
+					"items":   qr,
+					"offset":  "0",
+					"limit":   "25",
+				},
+			)
+		}
+	})
+
+	restGroup.GET("/staff", func(c *gin.Context) {
+		resID := c.Query("resId")
 		rid, _ := strconv.ParseInt(resID, 10, 64)
 		staff, header := controllers.GetRestaurantStaff(rid)
 		if staff == nil {
@@ -369,9 +393,9 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		}
 	})
 
-	restGroup.GET("/:resId/:tableID/tables", func(c *gin.Context) {
-		resID := c.Param("resID")
-		tableID := c.Param("tableID")
+	restGroup.GET("/tables", func(c *gin.Context) {
+		resID := c.Query("resId")
+		tableID := c.Query("tableId")
 		rid, _ := strconv.ParseInt(resID, 10, 64)
 		tid, _ := strconv.ParseInt(tableID, 10, 64)
 		tables, header := controllers.GetRestaurantTables(rid, tid)
@@ -441,28 +465,9 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		}
 	})
 
-	restGroup.POST("/categories", func(c *gin.Context) {
-		category, header := controllers.CreateCategory(c)
-		if category == 0 {
-			c.Header("Content-Type", "application/json")
-			c.JSON(http.StatusNotFound, header)
-			c.Abort()
-		} else {
-			c.JSON(http.StatusOK,
-				gin.H{
-					"status":  "200",
-					"message": "OK",
-					"items":   category,
-					"offset":  "0",
-					"limit":   "25",
-				},
-			)
-		}
-	})
-
-	restGroup.GET("/tables/:restID/waiter/:waiterID", func(c *gin.Context) {
-		restID := c.Param("restID")
-		waiterID := c.Param("waiterID")
+	restGroup.GET("/waiters/tables", func(c *gin.Context) {
+		restID := c.Query("resId")
+		waiterID := c.Query("waiterId")
 		rid, _ := strconv.ParseInt(restID, 10, 64)
 		tid, _ := strconv.ParseInt(waiterID, 10, 64)
 		tables, header := controllers.GetWaiterTables(rid, tid)
@@ -484,9 +489,9 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		}
 	})
 
-	restGroup.GET("/tables/:restID/order/:tableID", func(c *gin.Context) {
-		restID := c.Param("restID")
-		tableID := c.Param("tableID")
+	restGroup.GET("/tables/order", func(c *gin.Context) {
+		restID := c.Query("resId")
+		tableID := c.Query("tableId")
 		rid, _ := strconv.ParseInt(restID, 10, 64)
 		tid, _ := strconv.ParseInt(tableID, 10, 64)
 		orders, header := controllers.GetWaiterOrdersByTable(rid, tid)
@@ -508,8 +513,8 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		}
 	})
 
-	restGroup.GET("/waiters/:restID", func(c *gin.Context) {
-		restID := c.Param("restID")
+	restGroup.GET("/waiters", func(c *gin.Context) {
+		restID := c.Query("resId")
 		rid, _ := strconv.ParseInt(restID, 10, 64)
 		waiters, header := controllers.GetRestaurantWaiters(rid)
 		if waiters == nil {

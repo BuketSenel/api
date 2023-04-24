@@ -13,8 +13,8 @@ func userRoute(rg *gin.RouterGroup) {
 	userGroup := rg.Group("/")
 	userGroup.Use(middleware.CORSMiddleware())
 
-	userGroup.GET("/name/:name", func(c *gin.Context) {
-		user := c.Params.ByName("name")
+	userGroup.GET("/name", func(c *gin.Context) {
+		user := c.Query("name")
 		c.JSON(http.StatusOK, gin.H{"user": user})
 	})
 
@@ -31,8 +31,8 @@ func userRoute(rg *gin.RouterGroup) {
 		}
 	})
 
-	userGroup.GET("/:userId/orders", func(c *gin.Context) {
-		uid := c.Param("userId")
+	userGroup.GET("/orders", func(c *gin.Context) {
+		uid := c.Query("userId")
 		status := c.Query("status")
 		userId, _ := strconv.ParseInt(uid, 10, 64)
 		orders, header := controllers.GetOrdersByUser(userId, status)
@@ -41,21 +41,12 @@ func userRoute(rg *gin.RouterGroup) {
 			c.JSON(http.StatusNotFound, header)
 			c.Abort()
 		} else {
-			c.JSON(http.StatusOK,
-				gin.H{
-					"status":  http.StatusOK,
-					"message": "OK",
-					"size":    len(orders),
-					"items":   orders,
-					"offset":  "0",
-					"limit":   "25",
-				},
-			)
+			c.JSON(http.StatusOK, header)
 		}
 	})
 
-	userGroup.GET("/:userId", func(c *gin.Context) {
-		uid := c.Param("userId")
+	userGroup.GET("", func(c *gin.Context) {
+		uid := c.Query("userId")
 		userId, _ := strconv.ParseInt(uid, 10, 64)
 		users, header := controllers.GetUser(userId)
 		if users == nil {
