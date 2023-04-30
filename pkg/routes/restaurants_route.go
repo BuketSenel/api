@@ -306,7 +306,7 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		resID := c.Query("resId")
 		tid, _ := strconv.ParseInt(tableID, 10, 64)
 		rid, _ := strconv.ParseInt(resID, 10, 64)
-		table, header := controllers.GetWaitersByTable(tid, rid)
+		table, header := controllers.GetWaitersByTable(rid, tid)
 		if table == nil {
 			c.Header("Content-Type", "application/json")
 			c.JSON(http.StatusNotFound, header)
