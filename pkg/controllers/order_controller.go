@@ -38,7 +38,7 @@ func GetRestaurantOrders(rid int64) (*[]models.CustomQuery, gin.H) {
 	return &customQuery, gin.H{"status": "success", "data": customQuery}
 }
 
-func GetOrdersByUser(uid int64, status string) ([]models.Order, gin.H) {
+func GetOrdersByUser(uid int64, status string, rid int64) ([]models.Order, gin.H) {
 	orders := []models.Order{}
 
 	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice?parseTime=true")
@@ -48,9 +48,9 @@ func GetOrdersByUser(uid int64, status string) ([]models.Order, gin.H) {
 	}
 	var results *sql.Rows
 	if status == "" {
-		results, err = db.Query("SELECT user_id, order_id, order_item_id, prod_name, table_id, quantity, order_status, orders.rest_id, products.price FROM products JOIN orders ON `orders`.`prod_id` = products.prod_id WHERE `orders`.`user_id` = (?) AND (`orders`.`order_status` = 'To do' OR  `orders`.`order_status` = 'In progress' OR `orders`.`order_status` = 'Completed')", uid)
+		results, err = db.Query("SELECT user_id, order_id, order_item_id, prod_name, table_id, quantity, order_status, orders.rest_id, products.price FROM products JOIN orders ON `orders`.`prod_id` = products.prod_id WHERE `orders`.`user_id` = (?) AND (`orders`.`order_status` = 'To do' OR  `orders`.`order_status` = 'In progress' OR `orders`.`order_status` = 'Completed') AND  `orders`.`rest_id` = (?)", uid, rid)
 	} else {
-		results, err = db.Query("SELECT user_id, order_id, order_item_id, prod_name, table_id, quantity, order_status, orders.rest_id, products.price FROM products JOIN orders ON `orders`.`prod_id` = products.prod_id WHERE `orders`.`user_id` = (?) and `orders`.`order_status` = (?);", uid, status)
+		results, err = db.Query("SELECT user_id, order_id, order_item_id, prod_name, table_id, quantity, order_status, orders.rest_id, products.price FROM products JOIN orders ON `orders`.`prod_id` = products.prod_id WHERE `orders`.`user_id` = (?) AND `orders`.`order_status` = (?) AND `orders`.`rest_id` = (?)", uid, status, rid)
 	}
 	defer db.Close()
 	if err != nil {

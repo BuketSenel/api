@@ -489,7 +489,7 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		}
 	})
 
-	restGroup.GET("/tables/order", func(c *gin.Context) {
+	restGroup.GET("/tables/orders", func(c *gin.Context) {
 		restID := c.Query("resId")
 		tableID := c.Query("tableId")
 		rid, _ := strconv.ParseInt(restID, 10, 64)

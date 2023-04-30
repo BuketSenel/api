@@ -34,8 +34,10 @@ func userRoute(rg *gin.RouterGroup) {
 	userGroup.GET("/orders", func(c *gin.Context) {
 		uid := c.Query("userId")
 		status := c.Query("status")
+		rid := c.Query("resId")
 		userId, _ := strconv.ParseInt(uid, 10, 64)
-		orders, header := controllers.GetOrdersByUser(userId, status)
+		restId, _ := strconv.ParseInt(rid, 10, 64)
+		orders, header := controllers.GetOrdersByUser(userId, status, restId)
 		if orders == nil {
 			c.Header("Content-Type", "application/json")
 			c.JSON(http.StatusNotFound, header)

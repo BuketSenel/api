@@ -75,7 +75,7 @@ func GetRestaurantStaff(rid int64) ([]models.User, gin.H) {
 		return nil, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Get Staff"}
 	}
 
-	results, err := db.Query("SELECT user_id, user_name, user_phone, email, rest_id, type, user_created_at  FROM users WHERE rest_id = ?", rid)
+	results, err := db.Query("SELECT user_id, user_name, user_phone, email, rest_id, type, user_created_at  FROM users WHERE rest_id = ? AND type != 'customer'", rid)
 	defer db.Close()
 
 	if err != nil {
