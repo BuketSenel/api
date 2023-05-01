@@ -571,4 +571,17 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		}
 
 	})
+
+	restGroup.GET("/popular", func(c *gin.Context) {
+		restID := c.Query("resId")
+		rid, _ := strconv.ParseInt(restID, 10, 64)
+		popular, header := controllers.GetPopularOrders(rid)
+		if len(popular) == 0 {
+			c.Header("Content-Type", "application/json")
+			c.JSON(http.StatusNotFound, header)
+			c.Abort()
+		} else {
+			c.JSON(http.StatusOK, popular)
+		}
+	})
 }

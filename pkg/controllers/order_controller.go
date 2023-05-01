@@ -147,3 +147,23 @@ func CreateOrder(c *gin.Context) (bool, gin.H) {
 	defer db.Close()
 	return true, gin.H{"status": http.StatusOK, "data": "Order Created!"}
 }
+
+func GetPopularOrders(rid int64) (bool, gin.H) {
+	orders := []models.CustomQuery{}
+	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
+	if err != nil {
+		return false, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error!"}
+	}
+	results, err := db.Query("SELECT p.prod_id, p.prod_name, p.prod_desc, p.cat_id, p.prod_image, p.price, p.currency, p.prep_dur_minute, SUM(o.quantity) AS total_quantity FROM orders o JOIN products p ON o.prod_id = p.prod_id WHERE o.rest_id = ? GROUP BY o.prod_idORDER BY total_quantity DESC LIMIT 5", rid)
+	if err != nil {
+		return false, gin.H{"status": http.StatusBadRequest, "message": "Selection Error!"}
+	}
+
+	for results.Next() {
+		order := models.CustomQuery{}
+		err = results.Scan(&order.ProductID, &order.ProductName, &order.ProductDescription, &order.CatID, &order.ProductImage, &order.Price, &order.Currency, &order.PrepDurationMin, &order.OrderItemTotalQty)
+		orders = append(orders, order)
+	}
+	defer db.Close()
+	return true, gin.H{"status": "success", "data": orders}
+}

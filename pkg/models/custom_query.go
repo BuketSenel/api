@@ -43,4 +43,5 @@ type CustomQuery struct {
 	Status             string    `json:"order_status"`
 	OrderCreatedAt     time.Time `json:"order_created_at"`
 	OrderUpdatedAt     time.Time `json:"order_updated_at"`
+	OrderItemTotalQty  int64     `json:"total_quantity"`
 }
