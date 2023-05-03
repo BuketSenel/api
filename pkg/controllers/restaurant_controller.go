@@ -3,14 +3,10 @@ package controllers
 import (
 	"net/http"
 
-	"github.com/SelfServiceCo/api/pkg/drivers"
 	"github.com/SelfServiceCo/api/pkg/models"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 )
-
-var selfdb = "selfservicedb"
-var conf = drivers.MysqlConfigLoad()
 
 func GetRestaurant(id int64) ([]models.Restaurant, gin.H) {
 	db := CreateConnection()
