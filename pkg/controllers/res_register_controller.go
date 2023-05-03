@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"database/sql"
 	"fmt"
 	"net/http"
 
@@ -32,9 +31,9 @@ func RestaurantRegister(c *gin.Context) (bool, gin.H) {
 
 func SaveRestaurant(cq models.CustomQuery, c *gin.Context) (bool, gin.H) {
 	credential := models.Credential{}
-	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
-	if err != nil {
-		return false, gin.H{"status": http.StatusBadGateway, "message": "Database connection! Save Restaurant", "error": err.Error()}
+	db := CreateConnection()
+	if db == nil {
+		return false, gin.H{"status": http.StatusBadGateway, "message": "Database connection! Save Restaurant"}
 	}
 
 	rows, err := db.Query("SELECT * FROM users WHERE email = ?", cq.Email)
@@ -78,7 +77,7 @@ func SaveRestaurant(cq models.CustomQuery, c *gin.Context) (bool, gin.H) {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "Insertion error! Save Restaurant", "error": err.Error()}
 	}
 
-	defer db.Close()
+	CloseConnection(db)
 	return true, gin.H{"status": http.StatusOK, "message": "Registration Successful!"}
 }
 

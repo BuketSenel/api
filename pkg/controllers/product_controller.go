@@ -1,8 +1,6 @@
 package controllers
 
 import (
-	"database/sql"
-	"fmt"
 	"net/http"
 
 	"github.com/SelfServiceCo/api/pkg/models"
@@ -10,19 +8,17 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func ProductsByCategories(cid int64, rid int64) []models.Product {
-	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
+func ProductsByCategories(cid int64, rid int64) ([]models.Product, gin.H) {
+	db := CreateConnection()
 
-	if err != nil {
-		fmt.Println("Err", err.Error())
-		return nil
+	if db == nil {
+		return nil, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Get Products By Categories"}
 	}
 	results, err := db.Query("SELECT * FROM products WHERE cat_id = ? AND rest_id = ?", cid, rid)
-	defer db.Close()
+	CloseConnection(db)
 
 	if err != nil {
-		fmt.Println("Err", err.Error())
-		return nil
+		return nil, gin.H{"status": http.StatusBadRequest, "message": "Query Error! Get Products By Categories"}
 	}
 
 	products := []models.Product{}
@@ -30,27 +26,25 @@ func ProductsByCategories(cid int64, rid int64) []models.Product {
 		var pro models.Product
 		err = results.Scan(&pro.ID, &pro.Name, &pro.Description, &pro.CatID, &pro.ResID, &pro.Image, &pro.Price, &pro.Currency, &pro.PrepDurationMin)
 		if err != nil {
-			panic(err.Error())
+			return nil, gin.H{"status": http.StatusBadRequest, "message": "Scan Error! Get Products By Categories"}
 		}
 		products = append(products, pro)
 	}
 
-	return products
+	return products, gin.H{"status": http.StatusOK, "message": "OK"}
 }
 
-func ProductsByRestaurants(rid int64) []models.Product {
-	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
+func ProductsByRestaurants(rid int64) ([]models.Product, gin.H) {
+	db := CreateConnection()
 
-	if err != nil {
-		fmt.Println("Err", err.Error())
-		return nil
+	if db == nil {
+		return nil, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Get Products By Restaurants"}
 	}
 	results, err := db.Query("SELECT * FROM products WHERE rest_id = ?", rid)
-	defer db.Close()
+	CloseConnection(db)
 
 	if err != nil {
-		fmt.Println("Err", err.Error())
-		return nil
+		return nil, gin.H{"status": http.StatusBadRequest, "message": "Query Error! Get Products By Restaurants"}
 	}
 
 	products := []models.Product{}
@@ -58,12 +52,12 @@ func ProductsByRestaurants(rid int64) []models.Product {
 		var pro models.Product
 		err = results.Scan(&pro.ID, &pro.Name, &pro.Description, &pro.CatID, &pro.ResID, &pro.Image, &pro.Price, &pro.Currency, &pro.PrepDurationMin)
 		if err != nil {
-			panic(err.Error())
+			return nil, gin.H{"status": http.StatusBadRequest, "message": "Scan Error! Get Products By Restaurants"}
 		}
 		products = append(products, pro)
 	}
 
-	return products
+	return products, gin.H{"status": http.StatusOK, "message": "OK"}
 }
 
 func CreateProduct(c *gin.Context) (bool, gin.H) {
@@ -73,14 +67,14 @@ func CreateProduct(c *gin.Context) (bool, gin.H) {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "Bind Error! Create Product"}
 	}
 
-	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
+	db := CreateConnection()
 
-	if err != nil {
+	if db == nil {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Create Product"}
 	}
 
 	results, err := db.Query("INSERT INTO products (prod_name, prod_desc, cat_id, rest_id, prod_image, price, currency, prep_dur_minute) VALUES (?,?,?,?,?,?,?,?)", product.Name, product.Description, product.CatID, product.ResID, product.Image, product.Price, product.Currency, product.PrepDurationMin)
-	defer db.Close()
+	CloseConnection(db)
 	if err != nil {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "Insertion Error! Create Product"}
 	}
@@ -94,14 +88,14 @@ func EditProduct(c *gin.Context) (bool, gin.H) {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "Bind Error! Edit Product"}
 	}
 
-	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
+	db := CreateConnection()
 
-	if err != nil {
+	if db == nil {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Edit Product"}
 	}
 
 	results, err := db.Query("UPDATE products SET prod_name = ?, prod_desc = ?, price = ?, currency = ?, prep_dur_minute = ? WHERE prod_id = ?", product.Name, product.Description, product.Price, product.Currency, product.PrepDurationMin, product.ID)
-	defer db.Close()
+	CloseConnection(db)
 	if err != nil {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "Update Error! Edit Product"}
 	}
@@ -115,14 +109,14 @@ func DeleteProduct(c *gin.Context) (bool, gin.H) {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "Bind Error! Delete Product"}
 	}
 
-	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
+	db := CreateConnection()
 
-	if err != nil {
+	if db == nil {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Delete Product"}
 	}
 
 	results, err := db.Query("DELETE FROM products WHERE prod_id = ?", product.ID)
-	defer db.Close()
+	CloseConnection(db)
 	if err != nil {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "Delete Error! Delete Product"}
 	}

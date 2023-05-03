@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"database/sql"
 	"fmt"
 	"net/http"
 
@@ -17,13 +16,13 @@ func Login(c *gin.Context) (string, gin.H) {
 		return "", gin.H{"status": http.StatusBadRequest, "message": "Please fill all the fields"}
 	}
 
-	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
-	if err != nil {
+	db := CreateConnection()
+	if db == nil {
 		return "", gin.H{"status": http.StatusBadRequest, "message": "Connection Error!!"}
 	}
 
 	var hashed string
-	err = db.QueryRow("SELECT password from credentials WHERE email = ?", cred.Email).Scan(&hashed)
+	err := db.QueryRow("SELECT password from credentials WHERE email = ?", cred.Email).Scan(&hashed)
 	if err != nil {
 		fmt.Println("Selection Error!", err.Error())
 		return "", gin.H{"status": http.StatusBadRequest, "message": err}
@@ -43,7 +42,7 @@ func Login(c *gin.Context) (string, gin.H) {
 	if err != nil {
 		return "", gin.H{"status": http.StatusBadRequest, "message": err, "data": results}
 	}
-
+	CloseConnection(db)
 	return token, gin.H{"status": http.StatusOK, "message": "Login Successful!"}
 }
 

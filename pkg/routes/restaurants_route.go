@@ -61,15 +61,10 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		catID := c.Query("catId")
 		rid, _ := strconv.ParseInt(resID, 16, 64)
 		cid, _ := strconv.ParseInt(catID, 16, 64)
-		products := controllers.ProductsByCategories(cid, rid)
+		products, header := controllers.ProductsByCategories(cid, rid)
 		if len(products) == 0 {
 			c.Header("Content-Type", "application/json")
-			c.JSON(http.StatusNotFound,
-				gin.H{
-					"status":    http.StatusNotFound,
-					"message: ": "No categories found!",
-				},
-			)
+			c.JSON(http.StatusNotFound, header)
 			c.Abort()
 		} else {
 			c.JSON(http.StatusOK,
@@ -88,15 +83,10 @@ func restaurantRoute(rg *gin.RouterGroup) {
 	restGroup.GET("/products", func(c *gin.Context) {
 		resID := c.Query("resId")
 		rid, _ := strconv.ParseInt(resID, 16, 64)
-		products := controllers.ProductsByRestaurants(rid)
+		products, header := controllers.ProductsByRestaurants(rid)
 		if len(products) == 0 {
 			c.Header("Content-Type", "application/json")
-			c.JSON(http.StatusNotFound,
-				gin.H{
-					"status":    http.StatusNotFound,
-					"message: ": "No categories found!",
-				},
-			)
+			c.JSON(http.StatusNotFound, header)
 			c.Abort()
 		} else {
 			c.JSON(http.StatusOK,

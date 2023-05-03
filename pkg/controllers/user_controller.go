@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"database/sql"
 	"net/http"
 
 	"github.com/SelfServiceCo/api/pkg/models"
@@ -9,8 +8,8 @@ import (
 )
 
 func getUser(email string) (string, int64, int64, gin.H) {
-	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
-	if err != nil {
+	db := CreateConnection()
+	if db == nil {
 		return "", 0, 0, gin.H{"status": http.StatusBadRequest, "message": "Connection Error!!"}
 	}
 	result, err := db.Query("SELECT type, user_id, rest_id FROM users WHERE email = ? AND 1=1", email)
@@ -18,7 +17,7 @@ func getUser(email string) (string, int64, int64, gin.H) {
 	if err != nil {
 		return "", 0, 0, gin.H{"status": http.StatusBadRequest, "message": err.Error()}
 	}
-	defer db.Close()
+	CloseConnection(db)
 	user := models.User{}
 	for result.Next() {
 		err = result.Scan(&user.Type, &user.ID, &user.ResID)
@@ -31,14 +30,14 @@ func getUser(email string) (string, int64, int64, gin.H) {
 
 func GetRestaurantWaiters(rid int64) ([]models.User, gin.H) {
 	var users = []models.User{}
-	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
+	db := CreateConnection()
 
-	if err != nil {
+	if db == nil {
 		return nil, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Get Waiters"}
 	}
 
 	results, err := db.Query("SELECT user_id, user_name FROM users WHERE rest_id = ? and type = 'waiter'", rid)
-	defer db.Close()
+	CloseConnection(db)
 
 	if err != nil {
 		return nil, gin.H{"status": http.StatusBadRequest, "message": "DB Query Error! Get Waiters"}
@@ -63,13 +62,13 @@ func AssignWaiter(c *gin.Context) (bool, gin.H) {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "Invalid JSON"}
 	}
 
-	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
+	db := CreateConnection()
 
-	if err != nil {
+	if db == nil {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Assign Waiter"}
 	}
 	result, err := db.Exec("UPDATE tables SET waiter_id = ? WHERE table_no = ? AND rest_id = ?", table.WaiterID, table.TableNo, table.RestID)
-	defer db.Close()
+	CloseConnection(db)
 
 	if err != nil {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "DB Query Error! Assign Waiter"}
@@ -80,14 +79,14 @@ func AssignWaiter(c *gin.Context) (bool, gin.H) {
 
 func GetUser(uid int64) ([]models.User, gin.H) {
 	var users = []models.User{}
-	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
+	db := CreateConnection()
 
-	if err != nil {
+	if db == nil {
 		return nil, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Get Users"}
 	}
 
 	results, err := db.Query("SELECT user_name, user_phone, email, rest_id, type FROM users WHERE user_id = ?", uid)
-	defer db.Close()
+	CloseConnection(db)
 
 	if err != nil {
 		return nil, gin.H{"status": http.StatusBadRequest, "message": "DB Query Error! Get Users", "error": err.Error()}
@@ -112,13 +111,13 @@ func EditUser(c *gin.Context) (bool, gin.H) {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "Invalid JSON"}
 	}
 
-	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
+	db := CreateConnection()
 
-	if err != nil {
+	if db == nil {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Edit User"}
 	}
 	result, err := db.Exec("UPDATE users SET user_name = ?, user_phone = ?, email = ?, type = ? WHERE user_id = ?", user.Name, user.Phone, user.Email, user.Type, user.ID)
-	defer db.Close()
+	CloseConnection(db)
 
 	if err != nil {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "DB Query Error! Edit User"}

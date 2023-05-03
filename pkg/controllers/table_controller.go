@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -15,15 +14,15 @@ import (
 
 func GetRestaurantTables(resID int64, tableId int64) ([]models.Table, gin.H) {
 
-	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
+	db := CreateConnection()
 
-	if err != nil {
+	if db == nil {
 		return nil, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Get Restaurant Tables"}
 	}
 
 	if tableId != 0 {
 		results, err := db.Query("SELECT rest_id, table_no, waiter_id FROM tables WHERE rest_id = ? AND table_no = ?", resID, tableId)
-		defer db.Close()
+		CloseConnection(db)
 
 		if err != nil {
 			return nil, gin.H{"status": http.StatusBadRequest, "message": "Query Error! Get Restaurant Tables"}
@@ -41,8 +40,7 @@ func GetRestaurantTables(resID int64, tableId int64) ([]models.Table, gin.H) {
 		return tables, gin.H{"status": http.StatusOK, "message": "success", "data": tables}
 	}
 	results, err := db.Query("SELECT rest_id, table_no, waiter_id FROM tables WHERE rest_id = ?", resID)
-	defer db.Close()
-
+	CloseConnection(db)
 	if err != nil {
 		return nil, gin.H{"status": http.StatusBadRequest, "message": "Query Error! Get Restaurant Tables", "error": err.Error()}
 	}
@@ -61,14 +59,14 @@ func GetRestaurantTables(resID int64, tableId int64) ([]models.Table, gin.H) {
 
 func GetTable(tableId int64) (models.Table, gin.H) {
 	var table models.Table
-	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
+	db := CreateConnection()
 
-	if err != nil {
-		return table, gin.H{"error": err.Error()}
+	if db == nil {
+		return table, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Get Table"}
 	}
 
 	results, err := db.Query("SELECT * FROM tables WHERE table_id = ?", tableId)
-	defer db.Close()
+	CloseConnection(db)
 
 	if err != nil {
 		fmt.Println("Err", err.Error())
@@ -87,14 +85,14 @@ func GetTable(tableId int64) (models.Table, gin.H) {
 
 func OrdersByTable(tableId int64) ([]models.CustomQuery, gin.H) {
 
-	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
+	db := CreateConnection()
 
-	if err != nil {
+	if db == nil {
 		return nil, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Orders By Table"}
 	}
 
 	results, err := db.Query("SELECT * FROM orders WHERE table_id = ?", tableId)
-	defer db.Close()
+	CloseConnection(db)
 
 	if err != nil {
 		return nil, gin.H{"status": http.StatusBadRequest, "message": "DB Query Error! Orders By Table"}
@@ -121,10 +119,9 @@ func AddTable(c *gin.Context) (bool, gin.H) {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "Bind Error! Create Product"}
 	}
 
-	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
+	db := CreateConnection()
 
-	if err != nil {
-		fmt.Println("Err", err.Error())
+	if db == nil {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Add Table"}
 	}
 
@@ -135,10 +132,9 @@ func AddTable(c *gin.Context) (bool, gin.H) {
 	}
 
 	_, err = db.Exec("INSERT INTO tables (table_no, rest_id, qr) VALUES (?, ?, ?)", table.TableNo, table.RestID, domain)
-	defer db.Close()
+	CloseConnection(db)
 
 	if err != nil {
-		fmt.Println("Err", err.Error())
 		return false, gin.H{"status": http.StatusBadRequest, "message": "DB Query Error! Add Table", "error": err.Error()}
 	}
 
@@ -179,16 +175,16 @@ func CreateQRCode(tid int64, rid int64) (string, gin.H) {
 }
 
 func GetQRCode(rid int64, tid int64) (string, gin.H) {
-	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
+	db := CreateConnection()
 
-	if err != nil {
+	if db == nil {
 		return "", gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Get QR Code"}
 	}
 	results, err := db.Query("SELECT qr FROM tables WHERE table_no = (?) AND rest_id = (?)", tid, rid)
 	if err != nil {
 		return "", gin.H{"status": http.StatusBadRequest, "message": "DB Query Error! Get QR Code"}
 	}
-	defer db.Close()
+	CloseConnection(db)
 	table := models.Table{}
 	for results.Next() {
 		err = results.Scan(&table.QRString)
@@ -207,15 +203,14 @@ func EditTable(c *gin.Context) (bool, gin.H) {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "Bind Error! Edit Table"}
 	}
 
-	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
+	db := CreateConnection()
 
-	if err != nil {
-		fmt.Println("Err", err.Error())
+	if db == nil {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Edit Table"}
 	}
 
 	_, err = db.Exec("UPDATE tables SET table_no = ? WHERE table_no = ? and rest_id = ?", table.NewTableNo, table.TableNo, table.RestID)
-	defer db.Close()
+	CloseConnection(db)
 
 	if err != nil {
 		fmt.Println("Err", err.Error())

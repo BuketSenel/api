@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"database/sql"
 	"net/http"
 
 	"github.com/SelfServiceCo/api/pkg/models"
@@ -30,9 +29,9 @@ func UserRegister(c *gin.Context) (bool, gin.H) {
 
 func SaveUser(user models.User, c *gin.Context) (bool, gin.H) {
 	credential := models.Credential{}
-	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
-	if err != nil {
-		message := gin.H{"status": http.StatusBadGateway, "message": err.Error()}
+	db := CreateConnection()
+	if db == nil {
+		message := gin.H{"status": http.StatusBadGateway, "message": "DB Connection Error! Save User"}
 		return false, message
 	}
 
@@ -63,5 +62,6 @@ func SaveUser(user models.User, c *gin.Context) (bool, gin.H) {
 		message := gin.H{"status": http.StatusBadRequest, "message": err.Error()}
 		return false, message
 	}
+	CloseConnection(db)
 	return true, gin.H{"message": "Success", "status": http.StatusOK, "data": results}
 }

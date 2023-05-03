@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"database/sql"
 	"net/http"
 
 	"github.com/SelfServiceCo/api/pkg/drivers"
@@ -14,9 +13,9 @@ var selfdb = "selfservicedb"
 var conf = drivers.MysqlConfigLoad()
 
 func GetRestaurant(id int64) ([]models.Restaurant, gin.H) {
-	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice?parseTime=true")
+	db := CreateConnection()
 
-	if err != nil {
+	if db == nil {
 		return nil, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Get Restaurant"}
 	}
 
@@ -35,15 +34,15 @@ func GetRestaurant(id int64) ([]models.Restaurant, gin.H) {
 		}
 		restaurant = append(restaurant, rest)
 	}
-	defer db.Close()
+	CloseConnection(db)
 
 	return restaurant, gin.H{"status": http.StatusOK, "message": restaurant}
 }
 
 func GetTopRestaurants() ([]models.Restaurant, gin.H) {
-	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice?parseTime=true")
+	db := CreateConnection()
 
-	if err != nil {
+	if db == nil {
 		return nil, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Get Top Restaurant"}
 	}
 
@@ -52,7 +51,7 @@ func GetTopRestaurants() ([]models.Restaurant, gin.H) {
 	if err != nil {
 		return nil, gin.H{"status": http.StatusBadRequest, "message": "Selection Error! Get Top Restaurant"}
 	}
-
+	CloseConnection(db)
 	restaurants := []models.Restaurant{}
 	for results.Next() {
 		var rest models.Restaurant
@@ -63,20 +62,19 @@ func GetTopRestaurants() ([]models.Restaurant, gin.H) {
 		}
 		restaurants = append(restaurants, rest)
 	}
-	defer db.Close()
 
 	return restaurants, gin.H{"status": http.StatusOK, "message": restaurants}
 }
 
 func GetRestaurantStaff(rid int64) ([]models.User, gin.H) {
-	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice?parseTime=true")
+	db := CreateConnection()
 
-	if err != nil {
+	if db == nil {
 		return nil, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Get Staff"}
 	}
 
 	results, err := db.Query("SELECT user_id, user_name, user_phone, email, rest_id, type, user_created_at  FROM users WHERE rest_id = ? AND type != 'customer'", rid)
-	defer db.Close()
+	CloseConnection(db)
 
 	if err != nil {
 		return nil, gin.H{"status": http.StatusBadRequest, "message": "Selection Error! Get Staff"}
@@ -117,9 +115,9 @@ func AddStaff(c *gin.Context) (bool, gin.H) {
 
 func DeleteUser(c *gin.Context) (bool, gin.H) {
 	user := models.User{}
-	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice?parseTime=true")
+	db := CreateConnection()
 
-	if err != nil {
+	if db == nil {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Delete User"}
 	}
 	if err := c.BindJSON(&user); err != nil {
@@ -131,8 +129,7 @@ func DeleteUser(c *gin.Context) (bool, gin.H) {
 	}
 
 	results, err := db.Query("DELETE FROM users WHERE user_id = ? and type != 'customer'", user.ID)
-
-	defer db.Close()
+	CloseConnection(db)
 	if err != nil {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "Delete Error! Delete User"}
 	}
@@ -141,14 +138,14 @@ func DeleteUser(c *gin.Context) (bool, gin.H) {
 }
 
 func GetWaiterTables(rid int64, waiterID int64) ([]models.Table, gin.H) {
-	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice?parseTime=true")
+	db := CreateConnection()
 
-	if err != nil {
+	if db == nil {
 		return nil, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Get Tables"}
 	}
 
 	results, err := db.Query("SELECT table_no FROM tables WHERE rest_id = ? and waiter_id = ?", rid, waiterID)
-	defer db.Close()
+	CloseConnection(db)
 
 	if err != nil {
 		return nil, gin.H{"status": http.StatusBadRequest, "message": "Selection Error! Get Tables"}
@@ -168,13 +165,14 @@ func GetWaiterTables(rid int64, waiterID int64) ([]models.Table, gin.H) {
 }
 
 func GetWaiterOrdersByTable(rid int64, tableID int64) ([]models.CustomQuery, gin.H) {
-	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice?parseTime=true")
+	db := CreateConnection()
 
-	if err != nil {
+	if db == nil {
 		return nil, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Get Orders"}
 	}
 
-	results, err := db.Query("SELECT prod_name, prep_dur_minute, order_status, order_item_id FROM products JOIN orders ON `orders`.`prod_id` = products.prod_id WHERE `orders`.table_id = (?) and `orders`.order_status NOT IN ('done', 'paid', 'deny') and `orders`.rest_id = ?", tableID, rid)
+	results, err := db.Query("SELECT table_id, prod_name, prep_dur_minute, order_status, order_item_id FROM products JOIN orders ON `orders`.`prod_id` = products.prod_id WHERE `orders`.table_id = (?) and `orders`.order_status NOT IN ('done', 'paid', 'deny') and `orders`.rest_id = ?", tableID, rid)
+	CloseConnection(db)
 
 	if err != nil {
 		return nil, gin.H{"status": http.StatusBadRequest, "message": err.Error()}
@@ -183,7 +181,7 @@ func GetWaiterOrdersByTable(rid int64, tableID int64) ([]models.CustomQuery, gin
 	for results.Next() {
 		var cq models.CustomQuery
 
-		err = results.Scan(&cq.ProductName, &cq.PrepDurationMin, &cq.Status, &cq.OrderItemID)
+		err = results.Scan(&cq.TableID, &cq.ProductName, &cq.PrepDurationMin, &cq.Status, &cq.OrderItemID)
 		if err != nil {
 			return nil, gin.H{"status": http.StatusBadRequest, "message": "Scan Error! Get Orders", "data": results, "Error": err.Error()}
 		}
@@ -195,19 +193,20 @@ func GetWaiterOrdersByTable(rid int64, tableID int64) ([]models.CustomQuery, gin
 
 func TipWaiter(c *gin.Context) (bool, gin.H) {
 	tip := models.Tip{}
-	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice?parseTime=true")
+	db := CreateConnection()
 
-	if err != nil {
+	if db == nil {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Tipping Waiter"}
 	}
 
-	if err := c.BindJSON(&tip); err != nil {
+	var err error
+	if err = c.BindJSON(&tip); err != nil {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "Binding Error! Tipping Waiter"}
 
 	}
 
 	_, err = db.Query("INSERT INTO tips (user_id, waiter_id, rest_id, tip) VALUES (?, ?, ?, ?)", tip.UserID, tip.WaiterID, tip.RestID, tip.Tip)
-	defer db.Close()
+	CloseConnection(db)
 	if err != nil {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "Insert Error! Tipping Waiter"}
 	}
@@ -216,14 +215,14 @@ func TipWaiter(c *gin.Context) (bool, gin.H) {
 }
 
 func GetTips(rid int64, wid int64) ([]models.Tip, gin.H) {
-	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice?parseTime=true")
+	db := CreateConnection()
 
-	if err != nil {
+	if db == nil {
 		return nil, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Get Tips"}
 	}
 
 	results, err := db.Query("SELECT tip FROM tips WHERE rest_id = ? AND waiter_id = ?", rid, wid)
-	defer db.Close()
+	CloseConnection(db)
 
 	if err != nil {
 		return nil, gin.H{"status": http.StatusBadRequest, "message": "Selection Error! Get Tips"}
@@ -243,14 +242,14 @@ func GetTips(rid int64, wid int64) ([]models.Tip, gin.H) {
 }
 
 func GetWaitersByTable(rid int64, tid int64) ([]models.Table, gin.H) {
-	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice?parseTime=true")
+	db := CreateConnection()
 
-	if err != nil {
+	if db == nil {
 		return nil, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Get Waiters"}
 	}
 
 	results, err := db.Query("SELECT waiter_id, user_name FROM tables JOIN users ON `tables`.`rest_id` = ? AND `tables`.`table_no` = ? AND `tables`.`waiter_id` = users.user_id", rid, tid)
-	defer db.Close()
+	CloseConnection(db)
 
 	if err != nil {
 		return nil, gin.H{"status": http.StatusBadRequest, "message": "Selection Error! Get Waiters"}

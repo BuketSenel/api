@@ -1,8 +1,6 @@
 package controllers
 
 import (
-	"database/sql"
-	"fmt"
 	"net/http"
 
 	"github.com/SelfServiceCo/api/pkg/models"
@@ -10,19 +8,18 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func GetCategories() []models.Category {
-	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
+func GetCategories() ([]models.Category, gin.H) {
 
-	if err != nil {
-		fmt.Println("Err", err.Error())
-		return nil
+	db := CreateConnection()
+	if db == nil {
+		return nil, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Get Categories"}
 	}
+
 	results, err := db.Query("SELECT * FROM categories WHERE rest_id = ?", 0)
-	defer db.Close()
+	CloseConnection(db)
 
 	if err != nil {
-		fmt.Println("Err", err.Error())
-		return nil
+		return nil, gin.H{"status": http.StatusBadRequest, "message": "Query Error! Get Categories"}
 	}
 
 	categories := []models.Category{}
@@ -35,18 +32,17 @@ func GetCategories() []models.Category {
 		categories = append(categories, cat)
 	}
 
-	return categories
+	return categories, gin.H{"status": http.StatusOK, "message": "OK"}
 }
 
 func CategoriesByRestaurant(rid int64) ([]models.Category, gin.H) {
-	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
+	db := CreateConnection()
 
-	if err != nil {
-		fmt.Println("Err", err.Error())
+	if db == nil {
 		return nil, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Get Categories By Restaurant"}
 	}
 	results, err := db.Query("SELECT * FROM categories WHERE rest_id = ?", rid)
-	defer db.Close()
+	CloseConnection(db)
 
 	if err != nil {
 		return nil, gin.H{"status": http.StatusBadRequest, "message": "Query Error! Get Categories By Restaurant"}
@@ -72,9 +68,9 @@ func CreateCategory(c *gin.Context) (int64, gin.H) {
 		return 0, gin.H{"status": http.StatusBadRequest, "message": "Bind Error! Create Product Category"}
 	}
 
-	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
+	db := CreateConnection()
 
-	if err != nil {
+	if db == nil {
 		return 0, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Create Product Category"}
 	}
 
@@ -94,23 +90,21 @@ func CreateCategory(c *gin.Context) (int64, gin.H) {
 	if err != nil {
 		return 0, gin.H{"status": http.StatusBadRequest, "message": "Scan Error! Create Product Category"}
 	}
-	defer db.Close()
+	CloseConnection(db)
 	return category.ID, gin.H{"status": http.StatusOK, "message": "Product category created!", "data": results, "result": result, "cat_id": category.ID}
 }
 
-func CategoriesForDropdown(rid int64) []models.Category {
-	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
+func CategoriesForDropdown(rid int64) ([]models.Category, gin.H) {
+	db := CreateConnection()
 
-	if err != nil {
-		fmt.Println("Err", err.Error())
-		return nil
+	if db == nil {
+		return nil, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Get Categories For Dropdown"}
 	}
 	results, err := db.Query("SELECT DISTINCT cat_id, cat_name FROM categories WHERE rest_id = ? or rest_id = 0", rid)
-	defer db.Close()
+	CloseConnection(db)
 
 	if err != nil {
-		fmt.Println("Err", err.Error())
-		return nil
+		return nil, gin.H{"status": http.StatusBadRequest, "message": "Query Error! Get Categories For Dropdown"}
 	}
 
 	categories := []models.Category{}
@@ -123,5 +117,5 @@ func CategoriesForDropdown(rid int64) []models.Category {
 		categories = append(categories, cat)
 	}
 
-	return categories
+	return categories, gin.H{"status": http.StatusOK, "message": "OK"}
 }
