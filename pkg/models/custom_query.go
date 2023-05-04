@@ -30,7 +30,7 @@ type CustomQuery struct {
 	CatID              int64     `json:"cat_id"`
 	CatName            string    `json:"cat_name"`
 	ParentCatID        int16     `json:"parent_cat_id"`
-	Quantity           int64     `json:"count"`
+	Quantity           int64     `json:"prod_count"`
 	CatImage           string    `json:"cat_image"`
 	Price              float32   `json:"price"`
 	Currency           string    `json:"currency"`

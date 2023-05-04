@@ -20,7 +20,7 @@ func GetRestaurantOrders(rid int64) (*[]models.CustomQuery, gin.H) {
 		return nil, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error!"}
 	}
 
-	results, err := db.Query("SELECT order_item_id, prod_name, prod_desc, table_id, quantity, order_status, created_at FROM products JOIN orders ON `orders`.`prod_id` = products.prod_id WHERE `orders`.`rest_id` = (?) AND (`orders`.`order_status` = 'To do' OR  `orders`.`order_status` = 'In progress' OR `orders`.`order_status` = 'Completed')", rid)
+	results, err := db.Query("SELECT order_item_id, prod_name, prod_desc, table_id, prod_count, order_status, order_created_at FROM products JOIN orders ON `orders`.`prod_id` = products.prod_id WHERE `orders`.`rest_id` = (?) AND (`orders`.`order_status` = 'To do' OR  `orders`.`order_status` = 'In progress' OR `orders`.`order_status` = 'Completed')", rid)
 	if err != nil {
 		return nil, gin.H{"status": http.StatusBadRequest, "message": "Selection Error!"}
 	}
@@ -49,9 +49,9 @@ func GetOrdersByUser(uid int64, status string, rid int64) ([]models.Order, gin.H
 	var results *sql.Rows
 	var err error
 	if status == "" {
-		results, err = db.Query("SELECT user_id, order_id, order_item_id, prod_name, table_id, quantity, order_status, orders.rest_id, products.price FROM products JOIN orders ON `orders`.`prod_id` = products.prod_id WHERE `orders`.`user_id` = (?) AND (`orders`.`order_status` = 'To do' OR  `orders`.`order_status` = 'In progress' OR `orders`.`order_status` = 'Completed') AND  `orders`.`rest_id` = (?)", uid, rid)
+		results, err = db.Query("SELECT user_id, order_id, order_item_id, prod_name, table_id, prod_count, order_status, orders.rest_id, products.price FROM products JOIN orders ON `orders`.`prod_id` = products.prod_id WHERE `orders`.`user_id` = (?) AND (`orders`.`order_status` = 'To do' OR  `orders`.`order_status` = 'In progress' OR `orders`.`order_status` = 'Completed') AND  `orders`.`rest_id` = (?)", uid, rid)
 	} else {
-		results, err = db.Query("SELECT user_id, order_id, order_item_id, prod_name, table_id, quantity, order_status, orders.rest_id, products.price FROM products JOIN orders ON `orders`.`prod_id` = products.prod_id WHERE `orders`.`user_id` = (?) AND `orders`.`order_status` = (?) AND `orders`.`rest_id` = (?)", uid, status, rid)
+		results, err = db.Query("SELECT user_id, order_id, order_item_id, prod_name, table_id, prod_count, order_status, orders.rest_id, products.price FROM products JOIN orders ON `orders`.`prod_id` = products.prod_id WHERE `orders`.`user_id` = (?) AND `orders`.`order_status` = (?) AND `orders`.`rest_id` = (?)", uid, status, rid)
 	}
 	CloseConnection(db)
 	if err != nil {
@@ -106,7 +106,7 @@ func GetOrder(oid int64, rid int64) (*[]models.CustomQuery, gin.H) {
 		return nil, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error!"}
 	}
 
-	results, err := db.Query("SELECT order_item_id, prod_name, prod_desc, table_id, quantity, order_status FROM products JOIN orders ON orders.prod_id = products.prod_id WHERE `orders`.`rest_id` = (?) AND `orders`.`order_id` = (?)", rid, oid)
+	results, err := db.Query("SELECT order_item_id, prod_name, prod_desc, table_id, prod_count, order_status FROM products JOIN orders ON orders.prod_id = products.prod_id WHERE `orders`.`rest_id` = (?) AND `orders`.`order_id` = (?)", rid, oid)
 	if err != nil {
 		return nil, gin.H{"status": http.StatusBadRequest, "message": "Selection Error!"}
 
@@ -158,7 +158,7 @@ func GetPopularOrders(rid int64) (bool, gin.H) {
 	if err != nil {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error!"}
 	}
-	results, err := db.Query("SELECT p.prod_id, p.prod_name, p.prod_desc, p.cat_id, p.prod_image, p.price, p.currency, p.prep_dur_minute, SUM(o.quantity) AS total_quantity FROM orders o JOIN products p ON o.prod_id = p.prod_id WHERE o.rest_id = ? GROUP BY o.prod_id ORDER BY total_quantity DESC LIMIT 5", rid)
+	results, err := db.Query("SELECT p.prod_id, p.prod_name, p.prod_desc, p.cat_id, p.prod_image, p.price, p.currency, p.prep_dur_minute, SUM(o.prod_count) AS total_quantity FROM orders o JOIN products p ON o.prod_id = p.prod_id WHERE o.rest_id = ? GROUP BY o.prod_id ORDER BY total_quantity DESC LIMIT 5", rid)
 	if err != nil {
 		return false, gin.H{"status": http.StatusBadRequest, "message": err.Error()}
 	}
