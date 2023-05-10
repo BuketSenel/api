@@ -219,3 +219,24 @@ func EditTable(c *gin.Context) (bool, gin.H) {
 
 	return true, gin.H{"status": http.StatusOK, "message": "success"}
 }
+
+func DeleteTable(c *gin.Context) (bool, gin.H) {
+	table := models.Table{}
+	err := c.BindJSON(&table)
+	if err != nil {
+		return false, gin.H{"status": http.StatusBadRequest, "message": "Bind Error! Delete Table"}
+	}
+
+	db := CreateConnection()
+
+	if db == nil {
+		return false, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Delete Table"}
+	}
+
+	results, err := db.Query("DELETE FROM tables WHERE rest_id = ? AND table_no = ?", table.RestID, table.TableNo)
+	CloseConnection(db)
+	if err != nil {
+		return false, gin.H{"status": http.StatusBadRequest, "message": "Delete Error! Delete Table"}
+	}
+	return true, gin.H{"status": http.StatusOK, "message": "Table deleted!", "data": results}
+}

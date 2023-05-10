@@ -581,6 +581,18 @@ func restaurantRoute(rg *gin.RouterGroup) {
 
 	})
 
+	restGroup.POST("/tables/delete", func(c *gin.Context) {
+		tables, header := controllers.DeleteTable(c)
+		if !tables {
+			c.Header("Content-Type", "application/json")
+			c.JSON(http.StatusNotFound, header)
+			c.Abort()
+		} else {
+			c.JSON(http.StatusOK, header)
+		}
+
+	})
+
 	restGroup.GET("/popular", func(c *gin.Context) {
 		restID := c.Query("restId")
 		rid, _ := strconv.ParseInt(restID, 10, 64)
