@@ -49,4 +49,22 @@ func uploadRoute(rg *gin.RouterGroup) {
 		}
 	})
 
+	uploadGroup.POST("/categories", func(c *gin.Context) {
+		filePath, header := controllers.CategoryUploadFile(c)
+		if filePath == "" {
+			c.Header("Content-Type", "application/json")
+			c.JSON(http.StatusBadRequest, header)
+			c.Abort()
+		} else {
+			c.JSON(http.StatusOK,
+				gin.H{
+					"status":  http.StatusOK,
+					"message": "OK",
+					"items":   filePath,
+					"offset":  "0",
+					"limit":   "25",
+				},
+			)
+		}
+	})
 }
