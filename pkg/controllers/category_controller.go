@@ -119,3 +119,59 @@ func CategoriesForDropdown(rid int64) ([]models.Category, gin.H) {
 
 	return categories, gin.H{"status": http.StatusOK, "message": "OK"}
 }
+
+func DeleteCategory(c *gin.Context) (bool, gin.H) {
+	category := models.Category{}
+	err := c.BindJSON(&category)
+	if err != nil {
+		return false, gin.H{"status": http.StatusBadRequest, "message": "Bind Error! Delete Category"}
+	}
+
+	db := CreateConnection()
+
+	if db == nil {
+		return false, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Delete Category"}
+	}
+
+	results, err := db.Query("DELETE FROM categories WHERE cat_id = ? AND rest_id = ?", category.ID, category.RID)
+	CloseConnection(db)
+	if err != nil {
+		return false, gin.H{"status": http.StatusBadRequest, "message": "Delete Error! Delete Category"}
+	}
+	return true, gin.H{"status": http.StatusOK, "message": "Category deleted!", "data": results}
+}
+
+func EditCategory(c *gin.Context) (bool, gin.H) {
+	db := CreateConnection()
+
+	if db == nil {
+		return false, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Edit Category"}
+	}
+	updateQuery := "UPDATE categories SET "
+	args := make([]interface{}, 0)
+	var data map[string]interface{}
+
+	if err := c.BindJSON(&data); err != nil {
+		return false, gin.H{"status": http.StatusBadRequest, "message": "Bind Error! Edit Category", "error": err.Error()}
+	}
+
+	for key, value := range data {
+		updateQuery += key + " = ?, "
+		args = append(args, value)
+	}
+	updateQuery = updateQuery[:len(updateQuery)-2]
+
+	updateQuery += " WHERE rest_id = ? AND cat_id = ?"
+	args = append(args, data["rest_id"], data["cat_id"])
+
+	results, err := db.Exec(updateQuery, args...)
+	if err != nil {
+		return false, gin.H{"status": http.StatusBadRequest, "message": "Update Error! Edit Category", "data": data, "error": err.Error()}
+	}
+
+	CloseConnection(db)
+	if err != nil {
+		return false, gin.H{"status": http.StatusBadRequest, "message": "Update Error! Edit Category"}
+	}
+	return true, gin.H{"status": http.StatusOK, "message": "Category updated!", "data": results}
+}

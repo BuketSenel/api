@@ -49,7 +49,7 @@ func categoryRoute(rg *gin.RouterGroup) {
 
 	catGroup.GET("/dropdown", func(c *gin.Context) {
 		resID := c.Query("resId")
-		id, _ := strconv.ParseInt(resID, 16, 64)
+		id, _ := strconv.ParseInt(resID, 10, 64)
 		categories, header := controllers.CategoriesForDropdown(id)
 		if len(categories) == 0 {
 			c.Header("Content-Type", "application/json")
@@ -62,6 +62,44 @@ func categoryRoute(rg *gin.RouterGroup) {
 				"limit":  "25",
 				"items":  categories,
 			})
+		}
+	})
+
+	catGroup.POST("/delete", func(c *gin.Context) {
+		category, header := controllers.DeleteCategory(c)
+		if !category {
+			c.Header("Content-Type", "application/json")
+			c.JSON(http.StatusNotFound, header)
+			c.Abort()
+		} else {
+			c.JSON(http.StatusOK,
+				gin.H{
+					"status":  "200",
+					"message": "OK",
+					"items":   category,
+					"offset":  "0",
+					"limit":   "25",
+				},
+			)
+		}
+	})
+
+	catGroup.POST("/edit", func(c *gin.Context) {
+		category, header := controllers.EditCategory(c)
+		if !category {
+			c.Header("Content-Type", "application/json")
+			c.JSON(http.StatusNotFound, header)
+			c.Abort()
+		} else {
+			c.JSON(http.StatusOK,
+				gin.H{
+					"status":  "200",
+					"message": "OK",
+					"items":   category,
+					"offset":  "0",
+					"limit":   "25",
+				},
+			)
 		}
 	})
 }

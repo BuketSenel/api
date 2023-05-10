@@ -52,7 +52,10 @@ func ProductsByRestaurants(rid int64) ([]models.Product, gin.H) {
 		var pro models.Product
 		err = results.Scan(&pro.ID, &pro.Name, &pro.Description, &pro.CatID, &pro.ResID, &pro.Image, &pro.Price, &pro.Currency, &pro.PrepDurationMin)
 		if err != nil {
-			return nil, gin.H{"status": http.StatusBadRequest, "message": "Scan Error! Get Products By Restaurants"}
+			return nil, gin.H{"status": http.StatusBadRequest, "message": "Scan Error! Get Products By Restaurants", "error": err.Error()}
+		}
+		if !pro.Image.Valid {
+			pro.Image.String = ""
 		}
 		products = append(products, pro)
 	}
@@ -73,7 +76,7 @@ func CreateProduct(c *gin.Context) (bool, gin.H) {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Create Product"}
 	}
 
-	results, err := db.Query("INSERT INTO products (prod_name, prod_desc, cat_id, rest_id, prod_image, price, currency, prep_dur_minute) VALUES (?,?,?,?,?,?,?,?)", product.Name, product.Description, product.CatID, product.ResID, product.Image, product.Price, product.Currency, product.PrepDurationMin)
+	results, err := db.Query("INSERT INTO products (prod_name, prod_desc, cat_id, rest_id, price, currency, prep_dur_minute) VALUES (?,?,?,?,?,?,?)", product.Name, product.Description, product.CatID, product.ResID, product.Price, product.Currency, product.PrepDurationMin)
 	CloseConnection(db)
 	if err != nil {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "Insertion Error! Create Product"}
@@ -82,19 +85,33 @@ func CreateProduct(c *gin.Context) (bool, gin.H) {
 }
 
 func EditProduct(c *gin.Context) (bool, gin.H) {
-	product := models.Product{}
-	err := c.BindJSON(&product)
-	if err != nil {
-		return false, gin.H{"status": http.StatusBadRequest, "message": "Bind Error! Edit Product"}
-	}
-
 	db := CreateConnection()
 
 	if db == nil {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Edit Product"}
 	}
+	updateQuery := "UPDATE products SET "
+	args := make([]interface{}, 0)
+	var data map[string]interface{}
 
-	results, err := db.Query("UPDATE products SET prod_name = ?, prod_desc = ?, price = ?, currency = ?, prep_dur_minute = ? WHERE prod_id = ?", product.Name, product.Description, product.Price, product.Currency, product.PrepDurationMin, product.ID)
+	if err := c.BindJSON(&data); err != nil {
+		return false, gin.H{"status": http.StatusBadRequest, "message": "Bind Error! Edit Product", "error": err.Error()}
+	}
+
+	for key, value := range data {
+		updateQuery += key + " = ?, "
+		args = append(args, value)
+	}
+	updateQuery = updateQuery[:len(updateQuery)-2]
+
+	updateQuery += " WHERE rest_id = ? AND prod_id = ?"
+	args = append(args, data["rest_id"], data["prod_id"])
+
+	results, err := db.Exec(updateQuery, args...)
+	if err != nil {
+		return false, gin.H{"status": http.StatusBadRequest, "message": "Update Error! Edit Product", "data": data, "error": err.Error()}
+	}
+
 	CloseConnection(db)
 	if err != nil {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "Update Error! Edit Product"}

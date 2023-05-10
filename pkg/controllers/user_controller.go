@@ -105,23 +105,38 @@ func GetUser(uid int64) ([]models.User, gin.H) {
 }
 
 func EditUser(c *gin.Context) (bool, gin.H) {
-	var user models.User
-	err := c.BindJSON(&user)
-	if err != nil {
-		return false, gin.H{"status": http.StatusBadRequest, "message": "Invalid JSON"}
-	}
-
 	db := CreateConnection()
 
 	if db == nil {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Edit User"}
 	}
-	result, err := db.Exec("UPDATE users SET user_name = ?, user_phone = ?, email = ?, type = ? WHERE user_id = ?", user.Name, user.Phone, user.Email, user.Type, user.ID)
+
+	updateQuery := "UPDATE users SET "
+	args := make([]interface{}, 0)
+	var data map[string]interface{}
+
+	if err := c.BindJSON(&data); err != nil {
+		return false, gin.H{"status": http.StatusBadRequest, "message": "Bind Error! Edit User", "error": err.Error()}
+	}
+
+	for key, value := range data {
+		updateQuery += key + " = ?, "
+		args = append(args, value)
+	}
+	updateQuery = updateQuery[:len(updateQuery)-2]
+
+	updateQuery += " WHERE user_id = ?"
+	args = append(args, data["user_id"])
+
+	result, err := db.Exec(updateQuery, args...)
+	if err != nil {
+		return false, gin.H{"status": http.StatusBadRequest, "message": "Update Error! Edit Product", "data": data, "error": err.Error()}
+	}
 	CloseConnection(db)
 
 	if err != nil {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "DB Query Error! Edit User"}
 	}
 
-	return true, gin.H{"status": http.StatusOK, "message": "success", "data": user, "result": result}
+	return true, gin.H{"status": http.StatusOK, "message": "success", "data": data, "result": result}
 }

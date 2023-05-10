@@ -14,7 +14,7 @@ func restaurantRoute(rg *gin.RouterGroup) {
 	restGroup.Use(middleware.CORSMiddleware())
 	restGroup.GET("", func(c *gin.Context) {
 		resID := c.Query("resId")
-		id, _ := strconv.ParseInt(resID, 16, 64)
+		id, _ := strconv.ParseInt(resID, 10, 64)
 		restaurant, header := controllers.GetRestaurant(id)
 		if len(restaurant) == 0 {
 			c.Header("Content-Type", "application/json")
@@ -36,7 +36,7 @@ func restaurantRoute(rg *gin.RouterGroup) {
 
 	restGroup.GET("/categories", func(c *gin.Context) {
 		resID := c.Query("resId")
-		id, _ := strconv.ParseInt(resID, 16, 64)
+		id, _ := strconv.ParseInt(resID, 10, 64)
 		categories, header := controllers.CategoriesByRestaurant(id)
 		if len(categories) == 0 {
 			c.Header("Content-Type", "application/json")
@@ -59,8 +59,8 @@ func restaurantRoute(rg *gin.RouterGroup) {
 	restGroup.GET("/categories/products", func(c *gin.Context) {
 		resID := c.Query("resId")
 		catID := c.Query("catId")
-		rid, _ := strconv.ParseInt(resID, 16, 64)
-		cid, _ := strconv.ParseInt(catID, 16, 64)
+		rid, _ := strconv.ParseInt(resID, 10, 64)
+		cid, _ := strconv.ParseInt(catID, 10, 64)
 		products, header := controllers.ProductsByCategories(cid, rid)
 		if len(products) == 0 {
 			c.Header("Content-Type", "application/json")
@@ -82,7 +82,7 @@ func restaurantRoute(rg *gin.RouterGroup) {
 
 	restGroup.GET("/products", func(c *gin.Context) {
 		resID := c.Query("resId")
-		rid, _ := strconv.ParseInt(resID, 16, 64)
+		rid, _ := strconv.ParseInt(resID, 10, 64)
 		products, header := controllers.ProductsByRestaurants(rid)
 		if len(products) == 0 {
 			c.Header("Content-Type", "application/json")
@@ -143,7 +143,7 @@ func restaurantRoute(rg *gin.RouterGroup) {
 
 	restGroup.GET("/orders", func(c *gin.Context) {
 		resID := c.Query("resId")
-		id, _ := strconv.ParseInt(resID, 16, 64)
+		id, _ := strconv.ParseInt(resID, 10, 64)
 		orders, header := controllers.GetRestaurantOrders(id)
 		if *orders == nil {
 			c.Header("Content-Type", "application/json")
@@ -166,8 +166,8 @@ func restaurantRoute(rg *gin.RouterGroup) {
 	restGroup.GET("/order", func(c *gin.Context) {
 		orderID := c.Query("orderId")
 		resID := c.Query("resId")
-		oid, _ := strconv.ParseInt(orderID, 16, 64)
-		rid, _ := strconv.ParseInt(resID, 16, 64)
+		oid, _ := strconv.ParseInt(orderID, 10, 64)
+		rid, _ := strconv.ParseInt(resID, 10, 64)
 		order, _ := controllers.GetOrder(oid, rid)
 		if *order == nil {
 			c.Header("Content-Type", "application/json")
@@ -448,6 +448,25 @@ func restaurantRoute(rg *gin.RouterGroup) {
 					"status":  "200",
 					"message": "OK",
 					"items":   product,
+					"offset":  "0",
+					"limit":   "25",
+				},
+			)
+		}
+	})
+
+	restGroup.POST("/edit", func(c *gin.Context) {
+		restaurant, header := controllers.EditRestaurant(c)
+		if !restaurant {
+			c.Header("Content-Type", "application/json")
+			c.JSON(http.StatusNotFound, header)
+			c.Abort()
+		} else {
+			c.JSON(http.StatusOK,
+				gin.H{
+					"status":  "200",
+					"message": "OK",
+					"items":   restaurant,
 					"offset":  "0",
 					"limit":   "25",
 				},

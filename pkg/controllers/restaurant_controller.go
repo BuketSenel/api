@@ -24,7 +24,7 @@ func GetRestaurant(id int64) ([]models.Restaurant, gin.H) {
 	restaurant := []models.Restaurant{}
 	for results.Next() {
 		rest := models.Restaurant{}
-		err = results.Scan(&rest.ID, &rest.Name, &rest.Summary, &rest.Logo, &rest.Address, &rest.District, &rest.City, &rest.Country, &rest.Phone, &rest.Tags, &rest.CreatedAt, &rest.UpdatedAt)
+		err = results.Scan(&rest.ID, &rest.Name, &rest.Summary, &rest.Logo, &rest.Address, &rest.District, &rest.City, &rest.Country, &rest.Phone, &rest.CreatedAt, &rest.UpdatedAt)
 		if err != nil {
 			return nil, gin.H{"status": http.StatusBadRequest, "message": "Scan Error! Get Restaurant", "data": results, "Error": err.Error()}
 		}
@@ -45,14 +45,14 @@ func GetTopRestaurants() ([]models.Restaurant, gin.H) {
 	results, err := db.Query("SELECT * FROM restaurants")
 
 	if err != nil {
-		return nil, gin.H{"status": http.StatusBadRequest, "message": "Selection Error! Get Top Restaurant"}
+		return nil, gin.H{"status": http.StatusBadRequest, "message": "Selection Error! Get Top Restaurant", "error": err.Error()}
 	}
 	CloseConnection(db)
 	restaurants := []models.Restaurant{}
 	for results.Next() {
 		var rest models.Restaurant
 
-		err = results.Scan(&rest.ID, &rest.Name, &rest.Summary, &rest.Logo, &rest.Address, &rest.District, &rest.City, &rest.Country, &rest.Phone, &rest.Tags, &rest.CreatedAt, &rest.UpdatedAt)
+		err = results.Scan(&rest.ID, &rest.Name, &rest.Summary, &rest.Logo, &rest.Address, &rest.District, &rest.City, &rest.Country, &rest.Phone, &rest.CreatedAt, &rest.UpdatedAt)
 		if err != nil {
 			return nil, gin.H{"status": http.StatusBadRequest, "message": "Scan Error! Get Top Restaurant", "data": results, "Error": err.Error()}
 		}
@@ -167,7 +167,7 @@ func GetWaiterOrdersByTable(rid int64, tableID int64) ([]models.CustomQuery, gin
 		return nil, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Get Orders"}
 	}
 
-	results, err := db.Query("SELECT table_id, prod_name, prep_dur_minute, order_status, order_item_id FROM products JOIN orders ON `orders`.`prod_id` = products.prod_id WHERE `orders`.table_id = (?) and `orders`.order_status NOT IN ('done', 'paid', 'deny') and `orders`.rest_id = ?", tableID, rid)
+	results, err := db.Query("SELECT table_id, prod_name, prep_dur_minute, order_status, order_item_id FROM products JOIN orders ON `orders`.`prod_id` = products.prod_id WHERE `orders`.table_id = (?) and `orders`.order_status NOT IN ('done', 'paid', 'deny') and `orders`.rest_id = (?)", tableID, rid)
 	CloseConnection(db)
 
 	if err != nil {
@@ -263,4 +263,41 @@ func GetWaitersByTable(rid int64, tid int64) ([]models.Table, gin.H) {
 
 	return waiters, gin.H{"status": http.StatusOK, "message": waiters}
 
+}
+
+func EditRestaurant(c *gin.Context) (bool, gin.H) {
+	db := CreateConnection()
+
+	if db == nil {
+		return false, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Edit Restaurant"}
+	}
+
+	updateQuery := "UPDATE restaurants SET "
+	args := make([]interface{}, 0)
+	var data map[string]interface{}
+
+	if err := c.BindJSON(&data); err != nil {
+		return false, gin.H{"status": http.StatusBadRequest, "message": "Bind Error! Edit Restaurant", "error": err.Error()}
+	}
+
+	for key, value := range data {
+		updateQuery += key + " = ?, "
+		args = append(args, value)
+	}
+	updateQuery = updateQuery[:len(updateQuery)-2]
+
+	updateQuery += " WHERE rest_id = ?"
+	args = append(args, data["rest_id"])
+
+	result, err := db.Exec(updateQuery, args...)
+	if err != nil {
+		return false, gin.H{"status": http.StatusBadRequest, "message": "Update Error! Edit Restaurant", "data": data, "error": err.Error()}
+	}
+	CloseConnection(db)
+
+	if err != nil {
+		return false, gin.H{"status": http.StatusBadRequest, "message": "DB Query Error! Edit Restaurant"}
+	}
+
+	return true, gin.H{"status": http.StatusOK, "message": "success", "data": data, "result": result}
 }
