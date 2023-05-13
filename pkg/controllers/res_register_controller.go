@@ -48,8 +48,8 @@ func SaveRestaurant(cq models.CustomQuery, c *gin.Context) (bool, gin.H) {
 
 	hashedPass := PasswordHash(fmt.Sprint(cq.Password))
 
-	query_restaurant := "INSERT INTO restaurants (rest_name, address, district, city, country, rest_phone) values (?,?,?,?,?,?)"
-	results, err := db.ExecContext(c, query_restaurant, string(cq.RestName), string(cq.Address), string(cq.District), string(cq.City), string(cq.Country), string(cq.RestPhone))
+	query_restaurant := "INSERT INTO restaurants (rest_name, summary, address, district, city, country, rest_phone) values (?,?,?,?,?,?)"
+	results, err := db.ExecContext(c, query_restaurant, string(cq.RestName), string(cq.Summary), string(cq.Address), string(cq.District), string(cq.City), string(cq.Country), string(cq.RestPhone))
 	if results == nil || err != nil {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "Insertion error! Save Restaurant", "error": err.Error()}
 	}
