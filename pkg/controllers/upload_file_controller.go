@@ -19,7 +19,13 @@ func RestaurantUploadFile(c *gin.Context) (string, gin.H) {
 	}
 	rest_id := c.PostForm("rest_id")
 
-	filePath := "/www/restaurant-icons/" + rest_id + "/" + file.Filename
+	filePath := "/www/restaurant-icons/" + rest_id + "/"
+	err = os.MkdirAll(filePath, os.ModePerm)
+	if err != nil {
+		return "", gin.H{"status": http.StatusBadRequest, "message": "Could not create the directory!"}
+	}
+
+	filePath = "/www/restaurant-icons/" + rest_id + "/" + file.Filename
 	err = c.SaveUploadedFile(file, filePath)
 
 	if err != nil {
@@ -43,8 +49,12 @@ func ProductUploadFile(c *gin.Context) (string, gin.H) {
 	}
 	rest_id := c.PostForm("rest_id")
 	prod_id := c.PostForm("prod_id")
-
-	filePath := "/www/product-icons/" + rest_id + "/" + prod_id + "/" + file.Filename
+	filePath := "/www/product-icons/" + rest_id + "/" + prod_id + "/"
+	err = os.MkdirAll(filePath, 0755)
+	if err != nil {
+		return "", gin.H{"status": http.StatusBadRequest, "message": err.Error()}
+	}
+	filePath = "/www/product-icons/" + rest_id + "/" + prod_id + "/" + file.Filename
 	err = c.SaveUploadedFile(file, filePath)
 
 	if err != nil {
@@ -71,7 +81,13 @@ func CategoryUploadFile(c *gin.Context) (string, gin.H) {
 	rest_id := c.PostForm("rest_id")
 	cat_id := c.PostForm("cat_id")
 
-	filePath := "/www/category-icons/" + rest_id + "/" + cat_id + "/" + file.Filename
+	filePath := "/www/category-icons/" + rest_id + "/" + cat_id + "/"
+	err = os.MkdirAll(filePath, 0755)
+	if err != nil {
+		return "", gin.H{"status": http.StatusBadRequest, "message": err.Error()}
+	}
+
+	filePath = "/www/category-icons/" + rest_id + "/" + cat_id + "/" + file.Filename
 	err = c.SaveUploadedFile(file, filePath)
 
 	if err != nil {
