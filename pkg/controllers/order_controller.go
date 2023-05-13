@@ -131,7 +131,7 @@ func CreateOrder(c *gin.Context) (bool, gin.H) {
 	products := []models.Product{}
 
 	if err := c.BindJSON(&orderRequest); err != nil {
-		return false, gin.H{"status": http.StatusBadRequest, "message": "Bind Error! Create Order"}
+		return false, gin.H{"status": http.StatusBadRequest, "message": "Bind Error! Create Order", "error": err.Error()}
 	}
 	if err := json.Unmarshal([]byte(orderRequest.Details), &products); err != nil {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "Unmarshal Error! Create Order", "data": err.Error()}
@@ -154,14 +154,15 @@ func CreateOrder(c *gin.Context) (bool, gin.H) {
 
 func GetPopularOrders(rid int64) (bool, gin.H) {
 	orders := []models.CustomQuery{}
-	db, err := sql.Open("mysql", conf.Name+":"+conf.Password+"@tcp("+conf.Db+":3306)/selfservice")
-	if err != nil {
+	db := CreateConnection()
+	if db == nil {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error!"}
 	}
 	results, err := db.Query("SELECT p.prod_id, p.prod_name, p.prod_desc, p.cat_id, p.prod_image, p.price, p.currency, p.prep_dur_minute, SUM(o.prod_count) AS total_quantity FROM orders o JOIN products p ON o.prod_id = p.prod_id WHERE o.rest_id = ? GROUP BY o.prod_id ORDER BY total_quantity DESC LIMIT 5", rid)
 	if err != nil {
 		return false, gin.H{"status": http.StatusBadRequest, "message": err.Error()}
 	}
+	CloseConnection(db)
 	for results.Next() {
 		order := models.CustomQuery{}
 		err = results.Scan(&order.ProductID, &order.ProductName, &order.ProductDescription, &order.CatID, &order.ProductImage, &order.Price, &order.Currency, &order.PrepDurationMin, &order.OrderItemTotalQty)
@@ -170,6 +171,71 @@ func GetPopularOrders(rid int64) (bool, gin.H) {
 		}
 		orders = append(orders, order)
 	}
-	defer db.Close()
+	return true, gin.H{"status": "success", "data": orders}
+}
+
+func GetDailyOrders(rid int64) (bool, gin.H) {
+	orders := []models.CustomQuery{}
+	db := CreateConnection()
+	if db == nil {
+		return false, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Get Daily Orders"}
+	}
+	results, err := db.Query("SELECT p.prod_id, p.prod_name, p.prod_desc, p.cat_id, p.prod_image, p.price, p.currency, p.prep_dur_minute, SUM(o.prod_count) AS total_quantity FROM orders o JOIN products p ON o.prod_id = p.prod_id WHERE o.rest_id = ? AND DATE(order_created_at) = CURDATE() GROUP BY o.prod_id ORDER BY total_quantity DESC", rid)
+	if err != nil {
+		return false, gin.H{"status": http.StatusBadRequest, "error": err.Error(), "message": "Selection Error! Get Daily Orders"}
+	}
+	CloseConnection(db)
+	for results.Next() {
+		order := models.CustomQuery{}
+		err = results.Scan(&order.ProductID, &order.ProductName, &order.ProductDescription, &order.CatID, &order.ProductImage, &order.Price, &order.Currency, &order.PrepDurationMin, &order.OrderItemTotalQty)
+		if err != nil {
+			return false, gin.H{"status": http.StatusBadRequest, "message": "Get Daily Orders Query Error!", "error": err.Error()}
+		}
+		orders = append(orders, order)
+	}
+	return true, gin.H{"status": "success", "data": orders}
+}
+
+func GetWeeklyOrders(rid int64) (bool, gin.H) {
+	orders := []models.CustomQuery{}
+	db := CreateConnection()
+	if db == nil {
+		return false, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Get Weekly Orders"}
+	}
+	results, err := db.Query("SELECT p.prod_id, p.prod_name, p.prod_desc, p.cat_id, p.prod_image, p.price, p.currency, p.prep_dur_minute, SUM(o.prod_count) AS total_quantity FROM orders o JOIN products p ON o.prod_id = p.prod_id WHERE o.rest_id = ? AND YEARWEEK(order_created_at) = YEARWEEK(CURDATE()) GROUP BY o.prod_id ORDER BY total_quantity DESC", rid)
+	if err != nil {
+		return false, gin.H{"status": http.StatusBadRequest, "error": err.Error(), "message": "Selection Error! Get Weekly Orders"}
+	}
+	CloseConnection(db)
+	for results.Next() {
+		order := models.CustomQuery{}
+		err = results.Scan(&order.ProductID, &order.ProductName, &order.ProductDescription, &order.CatID, &order.ProductImage, &order.Price, &order.Currency, &order.PrepDurationMin, &order.OrderItemTotalQty)
+		if err != nil {
+			return false, gin.H{"status": http.StatusBadRequest, "message": "Get Weekly Orders Query Error!", "error": err.Error()}
+		}
+		orders = append(orders, order)
+	}
+	return true, gin.H{"status": "success", "data": orders}
+}
+
+func GetMonthlyOrders(rid int64) (bool, gin.H) {
+	orders := []models.CustomQuery{}
+	db := CreateConnection()
+	if db == nil {
+		return false, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Get Monthly Orders"}
+	}
+	results, err := db.Query("SELECT p.prod_id, p.prod_name, p.prod_desc, p.cat_id, p.prod_image, p.price, p.currency, p.prep_dur_minute, SUM(o.prod_count) AS total_quantity FROM orders o JOIN products p ON o.prod_id = p.prod_id WHERE o.rest_id = ? AND YEAR(order_created_at) = YEAR(CURDATE()) AND MONTH(order_created_at) = MONTH(CURDATE()) GROUP BY o.prod_id ORDER BY total_quantity DESC", rid)
+	if err != nil {
+		return false, gin.H{"status": http.StatusBadRequest, "error": err.Error(), "message": "Selection Error! Get Monthly Orders"}
+	}
+	CloseConnection(db)
+	for results.Next() {
+		order := models.CustomQuery{}
+		err = results.Scan(&order.ProductID, &order.ProductName, &order.ProductDescription, &order.CatID, &order.ProductImage, &order.Price, &order.Currency, &order.PrepDurationMin, &order.OrderItemTotalQty)
+		if err != nil {
+			return false, gin.H{"status": http.StatusBadRequest, "message": "Get Monthly Orders Query Error!", "error": err.Error()}
+		}
+		orders = append(orders, order)
+	}
 	return true, gin.H{"status": "success", "data": orders}
 }

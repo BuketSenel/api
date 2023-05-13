@@ -605,4 +605,43 @@ func restaurantRoute(rg *gin.RouterGroup) {
 			c.JSON(http.StatusOK, header)
 		}
 	})
+
+	restGroup.GET("/orders/daily", func(c *gin.Context) {
+		restID := c.Query("restId")
+		rid, _ := strconv.ParseInt(restID, 10, 64)
+		popular, header := controllers.GetDailyOrders(rid)
+		if !popular {
+			c.Header("Content-Type", "application/json")
+			c.JSON(http.StatusBadRequest, header)
+			c.Abort()
+		} else {
+			c.JSON(http.StatusOK, header)
+		}
+	})
+
+	restGroup.GET("/orders/weekly", func(c *gin.Context) {
+		restID := c.Query("restId")
+		rid, _ := strconv.ParseInt(restID, 10, 64)
+		popular, header := controllers.GetWeeklyOrders(rid)
+		if !popular {
+			c.Header("Content-Type", "application/json")
+			c.JSON(http.StatusBadRequest, header)
+			c.Abort()
+		} else {
+			c.JSON(http.StatusOK, header)
+		}
+	})
+
+	restGroup.GET("/orders/monthly", func(c *gin.Context) {
+		restID := c.Query("restId")
+		rid, _ := strconv.ParseInt(restID, 10, 64)
+		popular, header := controllers.GetMonthlyOrders(rid)
+		if !popular {
+			c.Header("Content-Type", "application/json")
+			c.JSON(http.StatusBadRequest, header)
+			c.Abort()
+		} else {
+			c.JSON(http.StatusOK, header)
+		}
+	})
 }
