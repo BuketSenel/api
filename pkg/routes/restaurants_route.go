@@ -644,4 +644,17 @@ func restaurantRoute(rg *gin.RouterGroup) {
 			c.JSON(http.StatusOK, header)
 		}
 	})
+
+	restGroup.GET("/qr/all", func(c *gin.Context) {
+		restID := c.Query("restId")
+		rid, _ := strconv.ParseInt(restID, 10, 64)
+		qrs, header := controllers.GetAllQR(rid)
+		if !qrs {
+			c.Header("Content-Type", "application/json")
+			c.JSON(http.StatusBadRequest, header)
+			c.Abort()
+		} else {
+			c.JSON(http.StatusOK, header)
+		}
+	})
 }

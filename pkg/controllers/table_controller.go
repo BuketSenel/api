@@ -1,10 +1,13 @@
 package controllers
 
 import (
+	"archive/zip"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 
 	"github.com/SelfServiceCo/api/pkg/models"
@@ -157,7 +160,7 @@ func CreateQRCode(tid int64, rid int64) (string, gin.H) {
 	}
 	filePath := "/www/qr-codes/" + rest_id + "/" + table_no + ".png"
 	if _, err := os.Stat("/www/qr-codes/" + rest_id); os.IsNotExist(err) {
-		os.Mkdir("/www/qr-codes/"+rest_id, 0777)
+		os.MkdirAll("/www/qr-codes/"+rest_id, 0777)
 	}
 	osFile, err := os.Create(filePath)
 	if err != nil {
@@ -239,4 +242,70 @@ func DeleteTable(c *gin.Context) (bool, gin.H) {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "Delete Error! Delete Table"}
 	}
 	return true, gin.H{"status": http.StatusOK, "message": "Table deleted!", "data": results}
+}
+
+func GetAllQR(rid int64) (bool, gin.H) {
+
+	destination := "/www/qr-codes/" + strconv.FormatInt(rid, 10) + ".zip"
+	err := zipQrCodes("/www/qr-codes/"+strconv.FormatInt(rid, 10)+"/", destination)
+	if err != nil {
+		return false, gin.H{"status": http.StatusBadRequest, "message": err.Error()}
+	}
+
+	url, header := UploadToS3(destination)
+	if header["status"] != http.StatusOK {
+		return false, gin.H{"status": http.StatusBadRequest, "message": "QR Code Upload To S3 Error! Get All QR", "error": header}
+	}
+
+	return true, gin.H{"status": http.StatusOK, "message": "success", "url": url}
+}
+
+func zipQrCodes(source, target string) error {
+	f, err := os.Create(target)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	writer := zip.NewWriter(f)
+	defer writer.Close()
+
+	return filepath.Walk(source, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		header, err := zip.FileInfoHeader(info)
+		if err != nil {
+			return err
+		}
+
+		header.Method = zip.Deflate
+
+		header.Name, err = filepath.Rel(filepath.Dir(source), path)
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			header.Name += "/"
+		}
+
+		headerWriter, err := writer.CreateHeader(header)
+		if err != nil {
+			return err
+		}
+
+		if info.IsDir() {
+			return nil
+		}
+
+		f, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+
+		_, err = io.Copy(headerWriter, f)
+		return err
+	})
 }
