@@ -272,7 +272,7 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		resID := c.Query("resId")
 		wid, _ := strconv.ParseInt(waiterID, 10, 64)
 		rid, _ := strconv.ParseInt(resID, 10, 64)
-		tip, header := controllers.GetTips(wid, rid)
+		tip, header := controllers.GetTips(rid, wid)
 		if tip == nil {
 			c.Header("Content-Type", "application/json")
 			c.JSON(http.StatusNotFound, header)
