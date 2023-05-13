@@ -16,7 +16,7 @@ func RestaurantRegister(c *gin.Context) (bool, gin.H) {
 		c.AbortWithError(401, err)
 	}
 
-	if custQuery.RestName == "" || custQuery.Address == "" || custQuery.District == "" || custQuery.City == "" || custQuery.Country == "" || custQuery.Email == "" || custQuery.Password == "" || custQuery.RestPhone == "" || custQuery.UserPhone == "" {
+	if custQuery.RestName == "" || custQuery.Address == "" || custQuery.Summary == "" || custQuery.District == "" || custQuery.City == "" || custQuery.Country == "" || custQuery.Email == "" || custQuery.Password == "" || custQuery.RestPhone == "" || custQuery.UserPhone == "" {
 		fmt.Println("Registration Error!")
 		return false, gin.H{"status": http.StatusBadRequest, "message": "Please fill all the fields"}
 	}
