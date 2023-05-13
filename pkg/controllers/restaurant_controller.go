@@ -167,7 +167,7 @@ func GetWaiterOrdersByTable(rid int64, tableID int64) ([]models.CustomQuery, gin
 		return nil, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Get Orders"}
 	}
 
-	results, err := db.Query("SELECT table_id, prod_name, prep_dur_minute, order_status, order_item_id FROM products JOIN orders ON `orders`.`prod_id` = products.prod_id WHERE `orders`.table_id = (?) and `orders`.order_status NOT IN ('done', 'paid', 'deny') and `orders`.rest_id = (?)", tableID, rid)
+	results, err := db.Query("SELECT table_id, prod_name, prep_dur_minute, order_status, order_item_id FROM products JOIN orders ON `orders`.`prod_id` = `products`.prod_id WHERE `orders`.table_id = (?) and `orders`.order_status NOT IN ('paid', 'deny') and `orders`.rest_id = (?)", tableID, rid)
 	CloseConnection(db)
 
 	if err != nil {
