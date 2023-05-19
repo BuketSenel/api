@@ -36,7 +36,7 @@ func GetRestaurantWaiters(rid int64) ([]models.User, gin.H) {
 		return nil, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Get Waiters"}
 	}
 
-	results, err := db.Query("SELECT COUNT(tables.waiter_id), user_id, user_name FROM users JOIN tables ON users.user_id = tables.waiter_id WHERE users.rest_id = ? and type = 'waiter' GROUP BY tables.waiter_id", rid)
+	results, err := db.Query("SELECT user_id, user_name FROM users WHERE rest_id = ? and type = 'waiter'", rid)
 	CloseConnection(db)
 
 	if err != nil {
