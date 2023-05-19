@@ -35,6 +35,29 @@ func GetCategories() ([]models.Category, gin.H) {
 	return categories, gin.H{"status": http.StatusOK, "message": "OK"}
 }
 
+func GetCategory(rid int64, cid int64) (bool, gin.H) {
+	var cat models.Category
+	db := CreateConnection()
+	if db == nil {
+		return false, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Get Categories"}
+	}
+
+	results, err := db.Query("SELECT * FROM categories WHERE cat_id = ? AND rest_id = ?", cid, rid)
+	CloseConnection(db)
+
+	if err != nil {
+		return false, gin.H{"status": http.StatusBadRequest, "message": "Query Error! Get Categories", "error": err.Error()}
+	}
+
+	for results.Next() {
+		err = results.Scan(&cat.ID, &cat.RID, &cat.Name, &cat.Description, &cat.Image, &cat.ParentCatID)
+		if err != nil {
+			return false, gin.H{"status": http.StatusBadRequest, "message": "Scan Error! Get Categories"}
+		}
+	}
+	return true, gin.H{"status": http.StatusOK, "message": "OK", "items": cat}
+}
+
 func CategoriesByRestaurant(rid int64) ([]models.Category, gin.H) {
 	db := CreateConnection()
 

@@ -24,7 +24,7 @@ func GetRestaurant(id int64) ([]models.Restaurant, gin.H) {
 	restaurant := []models.Restaurant{}
 	for results.Next() {
 		rest := models.Restaurant{}
-		err = results.Scan(&rest.ID, &rest.Name, &rest.Summary, &rest.Logo, &rest.Address, &rest.District, &rest.City, &rest.Country, &rest.Phone, &rest.CreatedAt, &rest.UpdatedAt)
+		err = results.Scan(&rest.ID, &rest.Name, &rest.Summary, &rest.Logo, &rest.Address, &rest.District, &rest.City, &rest.Country, &rest.Phone, &rest.CreatedAt, &rest.UpdatedAt, &rest.Favorite)
 		if err != nil {
 			return nil, gin.H{"status": http.StatusBadRequest, "message": "Scan Error! Get Restaurant", "data": results, "Error": err.Error()}
 		}
@@ -35,7 +35,7 @@ func GetRestaurant(id int64) ([]models.Restaurant, gin.H) {
 	return restaurant, gin.H{"status": http.StatusOK, "message": restaurant}
 }
 
-func GetTopRestaurants() ([]models.Restaurant, gin.H) {
+func GetRestaurants() ([]models.Restaurant, gin.H) {
 	db := CreateConnection()
 
 	if db == nil {
@@ -52,7 +52,34 @@ func GetTopRestaurants() ([]models.Restaurant, gin.H) {
 	for results.Next() {
 		var rest models.Restaurant
 
-		err = results.Scan(&rest.ID, &rest.Name, &rest.Summary, &rest.Logo, &rest.Address, &rest.District, &rest.City, &rest.Country, &rest.Phone, &rest.CreatedAt, &rest.UpdatedAt)
+		err = results.Scan(&rest.ID, &rest.Name, &rest.Summary, &rest.Logo, &rest.Address, &rest.District, &rest.City, &rest.Country, &rest.Phone, &rest.CreatedAt, &rest.UpdatedAt, &rest.Favorite)
+		if err != nil {
+			return nil, gin.H{"status": http.StatusBadRequest, "message": "Scan Error! Get Top Restaurant", "data": results, "Error": err.Error()}
+		}
+		restaurants = append(restaurants, rest)
+	}
+
+	return restaurants, gin.H{"status": http.StatusOK, "message": restaurants}
+}
+
+func GetTopRestaurants() ([]models.Restaurant, gin.H) {
+	db := CreateConnection()
+
+	if db == nil {
+		return nil, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Get Top Restaurant"}
+	}
+
+	results, err := db.Query("SELECT * FROM restaurants WHERE favorite = 1")
+
+	if err != nil {
+		return nil, gin.H{"status": http.StatusBadRequest, "message": "Selection Error! Get Top Restaurant", "error": err.Error()}
+	}
+	CloseConnection(db)
+	restaurants := []models.Restaurant{}
+	for results.Next() {
+		var rest models.Restaurant
+
+		err = results.Scan(&rest.ID, &rest.Name, &rest.Summary, &rest.Logo, &rest.Address, &rest.District, &rest.City, &rest.Country, &rest.Phone, &rest.CreatedAt, &rest.UpdatedAt, &rest.Favorite)
 		if err != nil {
 			return nil, gin.H{"status": http.StatusBadRequest, "message": "Scan Error! Get Top Restaurant", "data": results, "Error": err.Error()}
 		}
@@ -133,6 +160,33 @@ func DeleteUser(c *gin.Context) (bool, gin.H) {
 	return true, gin.H{"message": "Success", "data": results}
 }
 
+func GetWaiterTableCount(rid int64) ([]models.User, gin.H) {
+	db := CreateConnection()
+
+	if db == nil {
+		return nil, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Get Tables"}
+	}
+
+	results, err := db.Query("SELECT COUNT(tables.waiter_id) as table_count, user_id, user_name FROM users JOIN tables ON users.user_id = tables.waiter_id WHERE users.rest_id = ? and type = 'waiter' GROUP BY tables.waiter_id", rid)
+	CloseConnection(db)
+
+	if err != nil {
+		return nil, gin.H{"status": http.StatusBadRequest, "message": "Selection Error! Get Tables"}
+	}
+
+	users := []models.User{}
+	for results.Next() {
+		var user models.User
+		err = results.Scan(&user.TableCount, &user.ID, &user.Name)
+		if err != nil {
+			return nil, gin.H{"status": http.StatusBadRequest, "message": "Scan Error! Get Tables", "data": results, "Error": err.Error()}
+		}
+		users = append(users, user)
+	}
+
+	return users, gin.H{"status": http.StatusOK, "message": users}
+}
+
 func GetWaiterTables(rid int64, waiterID int64) ([]models.Table, gin.H) {
 	db := CreateConnection()
 
@@ -210,24 +264,24 @@ func TipWaiter(c *gin.Context) (bool, gin.H) {
 	return true, gin.H{"message": "Success"}
 }
 
-func GetTips(rid int64, wid int64) ([]models.Tip, gin.H) {
+func GetTips(rid int64) ([]models.Tip, gin.H) {
 	db := CreateConnection()
 
 	if db == nil {
 		return nil, gin.H{"status": http.StatusBadRequest, "message": "DB Connection Error! Get Tips"}
 	}
 
-	results, err := db.Query("SELECT tip FROM tips WHERE rest_id = ? AND waiter_id = ?", rid, wid)
+	results, err := db.Query("SELECT * FROM tips WHERE MONTH(tip_created_at) = MONTH(CURRENT_TIMESTAMP) AND YEAR(tip_created_at) = YEAR(CURRENT_TIMESTAMP) AND rest_id = ?", rid)
 	CloseConnection(db)
 
 	if err != nil {
-		return nil, gin.H{"status": http.StatusBadRequest, "message": "Selection Error! Get Tips"}
+		return nil, gin.H{"status": http.StatusBadRequest, "message": "Selection Error! Get Tips", "error": err.Error()}
 	}
 
 	tips := []models.Tip{}
 	for results.Next() {
 		var tip models.Tip
-		err = results.Scan(&tip.Tip)
+		err = results.Scan(&tip.UserID, &tip.WaiterID, &tip.Tip, &tip.RestID, &tip.CreatedAt)
 		if err != nil {
 			return nil, gin.H{"status": http.StatusBadRequest, "message": "Scan Error! Get Tips", "data": results, "Error": err.Error()}
 		}

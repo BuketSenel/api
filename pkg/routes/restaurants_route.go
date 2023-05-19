@@ -56,6 +56,21 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		}
 	})
 
+	restGroup.GET("/category", func(c *gin.Context) {
+		resID := c.Query("resId")
+		catID := c.Query("catId")
+		rid, _ := strconv.ParseInt(resID, 10, 64)
+		cid, _ := strconv.ParseInt(catID, 10, 64)
+		category, header := controllers.GetCategory(rid, cid)
+		if !category {
+			c.Header("Content-Type", "application/json")
+			c.JSON(http.StatusNotFound, header)
+			c.Abort()
+		} else {
+			c.JSON(http.StatusOK, header)
+		}
+	})
+
 	restGroup.GET("/categories/products", func(c *gin.Context) {
 		resID := c.Query("resId")
 		catID := c.Query("catId")
@@ -138,6 +153,17 @@ func restaurantRoute(rg *gin.RouterGroup) {
 					"limit":   "25",
 				},
 			)
+		}
+	})
+
+	restGroup.GET("/all", func(c *gin.Context) {
+		restaurant, header := controllers.GetRestaurants()
+		if restaurant == nil {
+			c.Header("Content-Type", "application/json")
+			c.JSON(http.StatusNotFound, gin.H{"status": header})
+			c.Abort()
+		} else {
+			c.JSON(http.StatusOK, header)
 		}
 	})
 
@@ -268,26 +294,15 @@ func restaurantRoute(rg *gin.RouterGroup) {
 	})
 
 	restGroup.GET("/waiters/tips", func(c *gin.Context) {
-		waiterID := c.Query("waiterId")
 		resID := c.Query("resId")
-		wid, _ := strconv.ParseInt(waiterID, 10, 64)
 		rid, _ := strconv.ParseInt(resID, 10, 64)
-		tip, header := controllers.GetTips(rid, wid)
+		tip, header := controllers.GetTips(rid)
 		if tip == nil {
 			c.Header("Content-Type", "application/json")
 			c.JSON(http.StatusNotFound, header)
 			c.Abort()
 		} else {
-			c.JSON(http.StatusOK,
-				gin.H{
-					"status":  http.StatusOK,
-					"message": "OK",
-					"size":    len(tip),
-					"items":   tip,
-					"offset":  "0",
-					"limit":   "25",
-				},
-			)
+			c.JSON(http.StatusOK, header)
 		}
 	})
 
@@ -526,6 +541,29 @@ func restaurantRoute(rg *gin.RouterGroup) {
 		restID := c.Query("resId")
 		rid, _ := strconv.ParseInt(restID, 10, 64)
 		waiters, header := controllers.GetRestaurantWaiters(rid)
+		if waiters == nil {
+			c.Header("Content-Type", "application/json")
+			c.JSON(http.StatusNotFound, header)
+			c.Abort()
+		} else {
+			c.JSON(http.StatusOK,
+				gin.H{
+					"status":  "200",
+					"message": "OK",
+					"size":    len(waiters),
+					"items":   waiters,
+					"offset":  "0",
+					"limit":   "25",
+				},
+			)
+		}
+
+	})
+
+	restGroup.GET("/waiters/count", func(c *gin.Context) {
+		restID := c.Query("resId")
+		rid, _ := strconv.ParseInt(restID, 10, 64)
+		waiters, header := controllers.GetWaiterTableCount(rid)
 		if waiters == nil {
 			c.Header("Content-Type", "application/json")
 			c.JSON(http.StatusNotFound, header)
