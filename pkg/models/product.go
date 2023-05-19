@@ -13,4 +13,5 @@ type Product struct {
 	Price           float32        `json:"price"`
 	Currency        string         `json:"currency"`
 	PrepDurationMin int8           `json:"prep_dur_minute"`
+	Availability    bool           `json:"availability"`
 }

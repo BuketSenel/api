@@ -24,7 +24,7 @@ func ProductsByCategories(cid int64, rid int64) ([]models.Product, gin.H) {
 	products := []models.Product{}
 	for results.Next() {
 		var pro models.Product
-		err = results.Scan(&pro.ID, &pro.Name, &pro.Description, &pro.CatID, &pro.ResID, &pro.Image, &pro.Price, &pro.Currency, &pro.PrepDurationMin)
+		err = results.Scan(&pro.ID, &pro.Name, &pro.Description, &pro.CatID, &pro.ResID, &pro.Image, &pro.Price, &pro.Currency, &pro.PrepDurationMin, &pro.Availability)
 		if err != nil {
 			return nil, gin.H{"status": http.StatusBadRequest, "message": "Scan Error! Get Products By Categories"}
 		}
@@ -50,7 +50,7 @@ func ProductsByRestaurants(rid int64) ([]models.Product, gin.H) {
 	products := []models.Product{}
 	for results.Next() {
 		var pro models.Product
-		err = results.Scan(&pro.ID, &pro.Name, &pro.Description, &pro.CatID, &pro.ResID, &pro.Image, &pro.Price, &pro.Currency, &pro.PrepDurationMin)
+		err = results.Scan(&pro.ID, &pro.Name, &pro.Description, &pro.CatID, &pro.ResID, &pro.Image, &pro.Price, &pro.Currency, &pro.PrepDurationMin, &pro.Availability)
 		if err != nil {
 			return nil, gin.H{"status": http.StatusBadRequest, "message": "Scan Error! Get Products By Restaurants", "error": err.Error()}
 		}
