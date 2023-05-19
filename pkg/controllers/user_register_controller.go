@@ -35,7 +35,7 @@ func SaveUser(user models.User, c *gin.Context) (bool, gin.H) {
 		return false, message
 	}
 
-	rows, err := db.Query("SELECT * FROM users WHERE email = ?", user.Email)
+	rows, err := db.Query("SELECT * FROM users WHERE email = ? AND type = 'customer'", user.Email)
 
 	if err != nil {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "Database error! Save User", "error": err.Error()}

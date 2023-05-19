@@ -36,7 +36,7 @@ func SaveRestaurant(cq models.CustomQuery, c *gin.Context) (bool, gin.H) {
 		return false, gin.H{"status": http.StatusBadGateway, "message": "Database connection! Save Restaurant"}
 	}
 
-	rows, err := db.Query("SELECT * FROM users WHERE email = ?", cq.Email)
+	rows, err := db.Query("SELECT * FROM users WHERE email = ? AND type = 'Manager'", cq.Email)
 
 	if err != nil {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "Database error! Save User", "error": err.Error()}
@@ -48,7 +48,7 @@ func SaveRestaurant(cq models.CustomQuery, c *gin.Context) (bool, gin.H) {
 
 	hashedPass := PasswordHash(fmt.Sprint(cq.Password))
 
-	query_restaurant := "INSERT INTO restaurants (rest_name, summary, address, district, city, country, rest_phone) values (?,?,?,?,?,?)"
+	query_restaurant := "INSERT INTO restaurants (rest_name, summary, address, district, city, country, rest_phone) values (?,?,?,?,?,?,?)"
 	results, err := db.ExecContext(c, query_restaurant, string(cq.RestName), string(cq.Summary), string(cq.Address), string(cq.District), string(cq.City), string(cq.Country), string(cq.RestPhone))
 	if results == nil || err != nil {
 		return false, gin.H{"status": http.StatusBadRequest, "message": "Insertion error! Save Restaurant", "error": err.Error()}
