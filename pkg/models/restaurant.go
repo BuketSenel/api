@@ -17,4 +17,5 @@ type Restaurant struct {
 	Phone     string         `json:"rest_phone"`
 	CreatedAt time.Time      `json:"rest_created_at"`
 	UpdatedAt time.Time      `json:"rest_updated_at"`
+	Favorite  bool           `json:"favorite"`
 }
