@@ -25,7 +25,7 @@ func MysqlConnect(instance string) (*DB, error) {
 
 	d.SetMaxOpenConns(maxOpen)
 	d.SetMaxIdleConns(maxIdle)
-	d.SetConnMaxLifetime(maxOpen)
+	d.SetConnMaxLifetime(1)
 
 	dbConnection.SQL = d
 
